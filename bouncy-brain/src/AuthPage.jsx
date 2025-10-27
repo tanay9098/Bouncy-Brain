@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "./firebaseConfig";
+import { auth, provider, popup } from "./firebaseConfig";
+//import { signInWithPopup } from "firebase/auth";
+
 import "./AuthPage.css";
 
 const AuthPage = () => {
@@ -8,7 +9,7 @@ const AuthPage = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await popup(auth, provider);
       setUser(result.user);
     } catch (error) {
       console.error("Error signing in with Google", error);

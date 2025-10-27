@@ -3,8 +3,7 @@ import AuthPage from "./AuthPage";
 
 
 
-const App = () => {
-  return <AuthPage />;
+export const App = () => {
+  return <AuthPage/>;
 };
 
-export default App;
