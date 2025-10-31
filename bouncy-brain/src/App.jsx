@@ -1,9 +1,7 @@
-import React from "react";
-import AuthPage from "./AuthPage";
 
 
 
 export const App = () => {
-  return <AuthPage/>;
+  return (<p>This is a react app</p>);
 };
 
