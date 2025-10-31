@@ -1,10 +1,16 @@
+import './styles.css'
 
 
  const HeroBanner=()=>{
     return(
-        <p>Your ADD/ADHD Buddy🧠</p>
+        <div className='hero'>
+            <h1 className='hero-heading'> Bouncy Brain🧠</h1>
+            <p className='hero-subtext'>Your ADD/ADHD Buddy</p>
+
+        </div>
+        
     )
 
 }
 
-export default HeroBanner
+export default HeroBanner;

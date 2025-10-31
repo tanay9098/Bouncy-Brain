@@ -1,0 +1,24 @@
+.hero {
+  display: flex;
+  justify-content: center;  /* horizontal center */
+  align-items: center;      /* vertical center */
+  flex-direction: column;   /* stack heading + text */
+  height: 100vh;            /* full screen height */
+  text-align: center;       /* align text */
+  background: linear-gradient(135deg, #161618 0%, #cacbd1 100%);
+  color: white;
+}
+
+.hero-heading {
+  font-size: 4rem;          /* bigger heading */
+  font-weight: 800;         /* bolder */
+  margin: 0;
+  line-height: 1.2;
+}
+
+.hero-subtext {
+  font-size: 1.5rem;        /* slightly smaller */
+  font-weight: 400;
+  opacity: 0.9;
+  margin-top: 1rem;
+}
