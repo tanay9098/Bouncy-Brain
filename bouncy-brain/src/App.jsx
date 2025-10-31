@@ -1,9 +1,21 @@
-import React from "react";
-import AuthPage from "./AuthPage";
 
+import HeroBanner from "./HeroBanner";
 
 
 export const App = () => {
-  return (<p>This is a react app</p>)
+  
+  return(
+
+  <div>
+        <HeroBanner/>
+
+
+
+  </div>
+
+
+
+
+);
 };
 
