@@ -3,6 +3,7 @@ import HeroBanner from "./HeroBanner";
 
 
 export const App = () => {
+ 
   
   return(
 
@@ -17,5 +18,6 @@ export const App = () => {
 
 
 );
+
 };
 
