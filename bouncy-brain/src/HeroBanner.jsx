@@ -9,7 +9,7 @@ import './styles.css'
 
         </div>
         
-        <p>Your ADD/ADHD Buddy🧠</p>
+        
     )
 
 }
