@@ -22,3 +22,39 @@
   opacity: 0.9;
   margin-top: 1rem;
 }
+
+
+
+.scenarios-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.scenarios-title {
+  font-size: 1.75rem; /* same as text-2xl */
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.scenarios-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px; /* same as gap-3 */
+  padding: 0 1rem;
+}
+
+.scenario-btn {
+  background-color: #1f2937; /* gray-800 */
+  color: white;
+  padding: 8px 16px; /* py-2 px-4 */
+  border: none;
+  border-radius: 9999px; /* fully rounded */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.scenario-btn:hover {
+  background-color: #374151; /* gray-700 */
+}
