@@ -7,7 +7,7 @@ const options = [
 export const Options=()=> {
   return (
     <div className="scenarios-container">
-      <h2 className="scenarios-title">Scenarios</h2>
+      <h2 className="scenarios-title">Apply all the options that you want for your application</h2>
       <div className="scenarios-buttons">
         {options.map((s, i) => (
           <button key={i} className="scenario-btn">
