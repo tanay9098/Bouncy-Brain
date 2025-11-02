@@ -9,7 +9,7 @@ export const Options=()=> {
     <div className="scenarios-container">
       <h2 className="scenarios-title">Scenarios</h2>
       <div className="scenarios-buttons">
-        {Options.map((s, i) => (
+        {options.map((s, i) => (
           <button key={i} className="scenario-btn">
             {s}
           </button>
