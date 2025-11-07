@@ -1,3 +1,3 @@
 export const TodoList=()=>{
-    return(<h1>This is Focus Timer page</h1>  )
+    return(<h1>This is To do list page</h1>  )
 }

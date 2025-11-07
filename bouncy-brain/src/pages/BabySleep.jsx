@@ -1,3 +1,3 @@
 export const BabySleep=()=>{
-    return(<h1>This is Focus Timer page</h1>  )
+    return(<h1>This is Baby Sleep page</h1>  )
 }

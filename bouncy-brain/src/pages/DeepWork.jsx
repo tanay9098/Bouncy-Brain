@@ -1,3 +1,3 @@
 export const DeepWork=()=>{
-    return(<h1>This is Focus Timer page</h1>  )
+    return(<h1>This is Deep Work page</h1>  )
 }

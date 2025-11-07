@@ -1,3 +1,3 @@
 export const DeadlineTimer=()=>{
-    return(<h1>This is Focus Timer page</h1>  )
+    return(<h1>This is Deadline Timer page</h1>  )
 }

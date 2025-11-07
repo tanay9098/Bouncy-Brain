@@ -1,3 +1,3 @@
 export const GamifyProductivity=()=>{
-    return(<h1>This is Focus Timer page</h1> )
+    return(<h1>This is Gamify Productivity page</h1> )
 }
