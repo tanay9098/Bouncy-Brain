@@ -1,7 +1,7 @@
 const options = [
-  "Focus Timer", "Anxiety Relief", "Arousal", "Attention Boost", "ASMR",
-  "Baby Sleep", "Binaural Beats", "Brain Massage", "Chores", "Create",
-  "Deep Work", "Self Care", "Relax", "Meditate", "Wake Up"
+  "Focus Timer","Deadline-timer","Pomodoro", "Anxiety Relief",  "Attention Boost", "ASMR",
+  "Baby Sleep", "Binaural Beats", "Todo-list", "Create",
+  "Deep Work", "Self Care", "Relax","Meditate",  "Wake Up","Gamify Productivity"
 ];
 
 export const Options=()=> {
