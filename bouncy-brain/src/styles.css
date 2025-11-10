@@ -58,3 +58,417 @@
 .scenario-btn:hover {
   background-color: #374151; /* gray-700 */
 }
+
+
+/* DeepWork css*/
+
+.deepwork-container {
+  text-align: center;
+  margin: 50px auto;
+  max-width: 400px;
+  background: #fdfdfd;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.focus-mode {
+  background: #0f172a;
+  color: #fff;
+  box-shadow: 0 0 30px rgba(0,0,0,0.3);
+}
+
+.quote {
+  font-style: italic;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.timer {
+  font-size: 3em;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.start-btn, .reset-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s ease;
+}
+
+.start-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.start-btn:hover {
+  background: #15803d;
+}
+
+.reset-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.reset-btn:hover {
+  background: #dc2626;
+}
+
+.focus-msg {
+  margin-top: 15px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+/*Focus Timer CSS*/
+
+.focus-timer {
+  background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 280px;
+  margin: 1rem auto;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  font-family: 'Poppins', sans-serif;
+  transition: transform 0.2s ease;
+}
+
+.focus-timer:hover {
+  transform: translateY(-4px);
+}
+
+.timer-display {
+  font-size: 3rem;
+  font-weight: 600;
+  margin: 1.5rem 0;
+}
+
+.timer-buttons button {
+  margin: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: white;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.timer-buttons button:hover {
+  background: #f3f3f3;
+}
+
+
+/*Deadline Timer*/
+
+.deadline-timer {
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  color: #333;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  font-family: 'Poppins', sans-serif;
+}
+
+.deadline-timer input {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin: 1rem 0;
+  width: 80%;
+}
+
+.time-left {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #444;
+}
+
+/*Pomodoro CSS*/
+
+.pomodoro {
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 280px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.pomodoro .time-display {
+  font-size: 3rem;
+  font-weight: 600;
+  margin: 1.2rem 0;
+}
+
+.pomodoro button {
+  background: white;
+  color: #333;
+  border: none;
+  margin: 0.4rem;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pomodoro button:hover {
+  background: #f3f3f3;
+}
+
+/*ToDo List*/
+.todo-list {
+  background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  color: #333;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 320px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.input-group {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.input-group input {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 10px 0 0 10px;
+  width: 70%;
+}
+
+.input-group button {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0 10px 10px 0;
+  background: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  margin: 0.5rem 0;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+li.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/*WakeUp*/
+.wakeup {
+  background: linear-gradient(135deg, #f6d365, #fda085);
+  color: #333;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 280px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.wakeup input {
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  margin: 1rem;
+  width: 70%;
+}
+
+.wakeup button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/*Relax css*/
+.relax {
+  background: linear-gradient(135deg, #c3cfe2, #c2e9fb);
+  text-align: center;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.relax button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.relax p {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/*Meditate CSS*/
+.meditate {
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  text-align: center;
+  color: #333;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 280px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.meditate button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin: 0.4rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/*Anxiety Relief*/
+.anxiety-relief {
+  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+  text-align: center;
+  color: #333;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.anxiety-relief button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-top: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.anxiety-relief p {
+  font-size: 1.2rem;
+  margin: 1rem 0;
+}
+
+/*Attention Boost*/
+.attention-boost {
+  background: linear-gradient(135deg, #fddb92, #d1fdff);
+  text-align: center;
+  color: #333;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.attention-boost button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.attention-boost p {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+/*Baby sleep*/
+.baby-sleep {
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  text-align: center;
+  padding: 2rem;
+  color: #333;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.baby-sleep button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/*Self Care*/
+
+.self-care {
+  background: linear-gradient(135deg, #fad0c4, #ffd1ff);
+  text-align: center;
+  color: #333;
+  padding: 2rem;
+  border-radius: 20px;
+  width: 300px;
+  margin: 1rem auto;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.self-care button {
+  background: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.self-care p {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}
