@@ -1,45 +1,53 @@
-import { Routes, Route } from 'react-router-dom';
+import React from "react";
+import { Routes, Route, Link } from "react-router-dom";
+import Auth from "./components/Auth";
+import Home from "./components/Home";
+import Dashboard from "./components/Dashboard";
+import FocusTimer from "./components/FocusTimer";
+import TodoList from "./components/TodoList";
+import Mindfulness from "./components/Mindfulness";
+import DeadlineTimer from "./components/DeadlineTimer";
+import { useUser } from "./contexts/UserContext";
 
-import MyFeatures from "./pages/MyFeatures";
+export default function App(){
+  const { user, setUser, setToken } = useUser();
 
-import HeroBanner from './HeroBanner.jsx';
-import { Options } from './Options.jsx';
-import Meditate from './pages/Meditate.jsx';
-import SelfCare from './pages/SelfCare.jsx';
-import AnxietyRelief from './pages/AnxietyRelief.jsx';
-import AttentionBoost from './pages/AttentionBoost.jsx';
-import BabySleep from './pages/BabySleep.jsx';
-import DeadlineTimer from './pages/DeadlineTimer.jsx';
-import DeepWork from './pages/DeepWork.jsx';
-import GamifyProductivity from './pages/GamifyProductivity.jsx';
-import Pomodoro from './pages/Pomodoro.jsx';
-import TodoList from './pages/TodoList.jsx';
-import WakeUp from './pages/WakeUp.jsx';
-import FocusTimer from './pages/FocusTimer.jsx';
-import Relax from './pages/Relax.jsx';
+  function logout(){
+    setUser(null); setToken(null);
+  }
 
-export const App = () => {
   return (
-    <div>
-      <Routes>
-        <Route path="/" element={<><HeroBanner /><Options /></>} />
-        <Route path="/myfeatures" element={<MyFeatures />} />
-        
-        {/* Existing individual routes below */}
-        <Route path="/meditate" element={<Meditate />} />
-        <Route path="/selfcare" element={<SelfCare />} />
-        <Route path="/anxietyrelief" element={<AnxietyRelief />} />
-        <Route path="/attentionboost" element={<AttentionBoost />} />
-        <Route path="/pomodoro" element={<Pomodoro />} />
-        <Route path="/deepwork" element={<DeepWork />} />
-        <Route path="/focustimer" element={<FocusTimer />} />
-        <Route path="/gamifyproductivity" element={<GamifyProductivity />} />
-        <Route path="/todo-list" element={<TodoList />} />
-        <Route path="/wakeup" element={<WakeUp />} />
-        <Route path="/relax" element={<Relax />} />
-        <Route path="/deadline-timer" element={<DeadlineTimer />} />
-        <Route path="/babysleep" element={<BabySleep />} />
-      </Routes>
+    <div className="app">
+      <nav className="nav">
+        <div className="brand">
+          <div className="logo">AD</div>
+          <div>
+            <h1>Bouncy-Brain</h1>
+            <div className="small">ADHD friendly UI</div>
+          </div>
+        </div>
+        <div className="nav-actions">
+          <Link to="/">Home</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/focus">Focus</Link>
+          <Link to="/todo">Todo</Link>
+          <Link to="/mindful">Mindfulness</Link>
+          <Link to="/deadline">Deadlines</Link>
+          {user ? <button onClick={logout}>Logout</button> : <Link to="/auth">Login</Link>}
+        </div>
+      </nav>
+
+      <main>
+        <Routes>
+          <Route path="/" element={<Home/>} />
+          <Route path="/auth" element={<Auth/>} />
+          <Route path="/dashboard" element={<Dashboard/>} />
+          <Route path="/focus" element={<FocusTimer/>} />
+          <Route path="/todo" element={<TodoList/>} />
+          <Route path="/mindful" element={<Mindfulness/>} />
+          <Route path="/deadline" element={<DeadlineTimer/>} />
+        </Routes>
+      </main>
     </div>
   );
-};
+}

@@ -1,474 +1,164 @@
-.hero {
-  display: flex;
-  justify-content: center;  /* horizontal center */
-  align-items: center;      /* vertical center */
-  flex-direction: column;   /* stack heading + text */
-  height: 100vh;            /* full screen height */
-  text-align: center;       /* align text */
-  background: linear-gradient(135deg, #161618 0%, #cacbd1 100%);
-  color: white;
+:root{
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent1: #bfe9d7; /* mint */
+  --accent2: #cde7ff; /* soft blue */
+  --accent3: #ffdfe6; /* light pink */
+  --shadow: 0 6px 18px rgba(16,24,40,0.06);
+  --radius: 12px;
+  --maxw: 1100px;
+  --text: #0f172a;
+  --glass: rgba(255,255,255,0.7);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.hero-heading {
-  font-size: 4rem;          /* bigger heading */
-  font-weight: 800;         /* bolder */
-  margin: 0;
-  line-height: 1.2;
+/* Reset & layout */
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{
+  margin:0;
+  background: linear-gradient(180deg, #f1fbff 0%, var(--bg) 100%);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  padding:24px;
 }
 
-.hero-subtext {
-  font-size: 1.5rem;        /* slightly smaller */
-  font-weight: 400;
-  opacity: 0.9;
-  margin-top: 1rem;
+/* app container */
+.app {
+  width:100%;
+  max-width:var(--maxw);
+  background: transparent;
 }
 
+/* NAV */
+.nav {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+}
+.brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.logo {
+  width:48px;
+  height:48px;
+  border-radius:10px;
+  background: linear-gradient(135deg, var(--accent1), var(--accent2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:var(--text);
+  box-shadow:var(--shadow);
+}
+.brand h1{font-size:18px;margin:0}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.nav a, .nav button{ text-decoration:none; color:var(--text); background:transparent; border:none; cursor:pointer; font-weight:600; padding:8px 10px; border-radius:8px }
+.nav a:hover, .nav button:hover{ background:var(--glass) }
 
-
-.scenarios-container {
-  text-align: center;
-  margin-top: 2rem;
+/* layout grid */
+.main-grid {
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  gap:18px;
+}
+@media (max-width:980px){
+  .main-grid{ grid-template-columns: 1fr; }
 }
 
-.scenarios-title {
-  font-size: 1.75rem; /* same as text-2xl */
-  font-weight: 600;
-  color: rgb(30, 29, 29);
-  margin-bottom: 1rem;
+/* cards */
+.card {
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
 }
 
-.scenarios-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px; /* same as gap-3 */
-  padding: 0 1rem;
+/* page header */
+.page-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
 }
 
-.scenario-btn {
-  background-color: #1f2937; /* gray-800 */
-  color: white;
-  padding: 8px 16px; /* py-2 px-4 */
-  border: none;
-  border-radius: 9999px; /* fully rounded */
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+/* buttons and inputs */
+.btn {
+  background: linear-gradient(90deg, #8fe6c9, #bfe9d7);
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+.btn.secondary{
+  background:transparent;
+  border:1px solid #e6eef5;
+  font-weight:600;
+}
+.input, .select {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #e6eef5;
+  font-size:14px;
+  outline:none;
+  margin-top:8px;
 }
 
-.scenario-btn:hover {
-  background-color: #374151; /* gray-700 */
+/* forms */
+.form-row{ display:flex; gap:10px; }
+.form-row .input{ flex:1; }
+
+/* specific components */
+.timer-large{
+  font-family: 'Courier New', monospace;
+  font-size:48px;
+  text-align:center;
+  padding:12px 0;
+}
+.mode-tabs{ display:flex; gap:8px; margin-bottom:10px; }
+.mode-tab{ padding:8px 10px; border-radius:8px; cursor:pointer; background:transparent; border:1px solid transparent; font-weight:600; }
+.mode-tab.active{ border-color:#e0f2ff; background:linear-gradient(90deg,var(--accent2), #fff); box-shadow:var(--shadow) }
+
+/* todo list */
+.todo-list { list-style:none; padding:0; margin:0; }
+.todo-item{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px dashed #f0f6f9; }
+.todo-item .meta{ font-size:13px; color:var(--muted) }
+.small { font-size:13px; color:var(--muted); }
+
+/* mindfulness */
+.mind-steps { font-size:18px; text-align:center; padding:20px 0; }
+
+/* Affirmations */
+.affirm {
+  border-radius:10px;
+  background: linear-gradient(180deg,#fff,#fbfffb);
+  padding:10px;
+  font-weight:600;
+  text-align:center;
 }
 
+/* auth */
+.auth-wrap{ display:flex; justify-content:center; align-items:center; min-height:60vh; }
+.auth-card{ width:360px; padding:18px; border-radius:14px; box-shadow:var(--shadow); background:linear-gradient(180deg,#ffffff,#fcfffe); }
+.auth-card h2{ margin:0 0 12px 0; font-size:20px; }
+.switch{ font-size:13px; color:var(--muted); margin-top:12px; text-align:center }
+.link-like{ color:#5580ff; cursor:pointer; }
 
-/* DeepWork css*/
+/* footer */
+.footer { margin-top:18px; font-size:13px; color:var(--muted); text-align:center }
 
-.deepwork-container {
-  text-align: center;
-  margin: 50px auto;
-  max-width: 400px;
-  background: #fdfdfd;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-}
-
-.focus-mode {
-  background: #0f172a;
-  color: #fff;
-  box-shadow: 0 0 30px rgba(0,0,0,0.3);
-}
-
-.quote {
-  font-style: italic;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-.timer {
-  font-size: 3em;
-  font-weight: bold;
-  margin: 20px 0;
-}
-
-.buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.start-btn, .reset-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s ease;
-}
-
-.start-btn {
-  background: #16a34a;
-  color: white;
-}
-
-.start-btn:hover {
-  background: #15803d;
-}
-
-.reset-btn {
-  background: #ef4444;
-  color: white;
-}
-
-.reset-btn:hover {
-  background: #dc2626;
-}
-
-.focus-msg {
-  margin-top: 15px;
-  font-size: 0.9em;
-  opacity: 0.9;
-}
-
-/*Focus Timer CSS*/
-
-.focus-timer {
-  background: linear-gradient(135deg, #7f7fd5, #86a8e7, #91eae4);
-  color: white;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 280px;
-  margin: 1rem auto;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  font-family: 'Poppins', sans-serif;
-  transition: transform 0.2s ease;
-}
-
-.focus-timer:hover {
-  transform: translateY(-4px);
-}
-
-.timer-display {
-  font-size: 3rem;
-  font-weight: 600;
-  margin: 1.5rem 0;
-}
-
-.timer-buttons button {
-  margin: 0.4rem;
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 10px;
-  background: white;
-  color: #333;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.timer-buttons button:hover {
-  background: #f3f3f3;
-}
-
-
-/*Deadline Timer*/
-
-.deadline-timer {
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-  color: #333;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  font-family: 'Poppins', sans-serif;
-}
-
-.deadline-timer input {
-  padding: 0.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  margin: 1rem 0;
-  width: 80%;
-}
-
-.time-left {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #444;
-}
-
-/*Pomodoro CSS*/
-
-.pomodoro {
-  background: linear-gradient(135deg, #ff758c, #ff7eb3);
-  color: white;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 280px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.pomodoro .time-display {
-  font-size: 3rem;
-  font-weight: 600;
-  margin: 1.2rem 0;
-}
-
-.pomodoro button {
-  background: white;
-  color: #333;
-  border: none;
-  margin: 0.4rem;
-  border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.pomodoro button:hover {
-  background: #f3f3f3;
-}
-
-/*ToDo List*/
-.todo-list {
-  background: linear-gradient(135deg, #89f7fe, #66a6ff);
-  color: #333;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 320px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.input-group {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.input-group input {
-  padding: 0.6rem;
-  border: none;
-  border-radius: 10px 0 0 10px;
-  width: 70%;
-}
-
-.input-group button {
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 0 10px 10px 0;
-  background: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-  margin: 0.5rem 0;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-li.done {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-
-/*WakeUp*/
-.wakeup {
-  background: linear-gradient(135deg, #f6d365, #fda085);
-  color: #333;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 280px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-}
-
-.wakeup input {
-  padding: 0.5rem;
-  border-radius: 10px;
-  border: none;
-  margin: 1rem;
-  width: 70%;
-}
-
-.wakeup button {
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 10px;
-  background: white;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/*Relax css*/
-.relax {
-  background: linear-gradient(135deg, #c3cfe2, #c2e9fb);
-  text-align: center;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-}
-
-.relax button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.relax p {
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-/*Meditate CSS*/
-.meditate {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
-  text-align: center;
-  color: #333;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 280px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-}
-
-.meditate button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  margin: 0.4rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/*Anxiety Relief*/
-.anxiety-relief {
-  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-  text-align: center;
-  color: #333;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.anxiety-relief button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  margin-top: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.anxiety-relief p {
-  font-size: 1.2rem;
-  margin: 1rem 0;
-}
-
-/*Attention Boost*/
-.attention-boost {
-  background: linear-gradient(135deg, #fddb92, #d1fdff);
-  text-align: center;
-  color: #333;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-}
-
-.attention-boost button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.attention-boost p {
-  margin-top: 1rem;
-  font-size: 1.1rem;
-}
-
-/*Baby sleep*/
-.baby-sleep {
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
-  text-align: center;
-  padding: 2rem;
-  color: #333;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-}
-
-.baby-sleep button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/*Self Care*/
-
-.self-care {
-  background: linear-gradient(135deg, #fad0c4, #ffd1ff);
-  text-align: center;
-  color: #333;
-  padding: 2rem;
-  border-radius: 20px;
-  width: 300px;
-  margin: 1rem auto;
-  font-family: 'Poppins', sans-serif;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.self-care button {
-  background: white;
-  border: none;
-  border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  margin-top: 1rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.self-care p {
-  margin-top: 1rem;
-  font-size: 1.2rem;
+/* responsive touches */
+@media (max-width:520px){
+  .timer-large{ font-size:36px }
+  .auth-card{ width:92%; padding:14px }
 }
