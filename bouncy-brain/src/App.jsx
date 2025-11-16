@@ -23,7 +23,7 @@ export default function App(){
           <div className="logo">AD</div>
           <div>
             <h1>Bouncy-Brain</h1>
-            <div className="small">ADHD friendly UI</div>
+            <div className="small">Your ADHD/ADD Buddy</div>
           </div>
         </div>
         <div className="nav-actions">

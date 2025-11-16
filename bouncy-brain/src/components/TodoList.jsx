@@ -8,7 +8,12 @@ export default function TodoList(){
   const [estimate,setEstimate] = useState(30);
   const [aiSuggest, setAiSuggest] = useState(null);
 
-  useEffect(()=> load(), []);
+  useEffect(()=>{
+    async function fetchData(){
+      await load();
+    }
+
+   fetchData();}, []);
   async function load(){
     try {
       const res = await api.get("/tasks");
