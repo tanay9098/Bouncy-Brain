@@ -24,7 +24,12 @@ router.post('/', auth, async (req,res)=>{
 });
 
 router.put('/:id/complete', auth, async (req,res)=>{
-  await Task.findByIdAndUpdate(req.params.id, { completed: true });
+  await Task.findByIdAndUpdate(req.params.id, { 
+    completed: true ,
+    completedAt: new Date()
+
+
+  });
   res.json({ ok: true });
 });
 

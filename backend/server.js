@@ -10,6 +10,8 @@ const taskRoutes = require('./routes/tasks');
 const sessionRoutes = require('./routes/sessions');
 const pushRoutes = require('./routes/push');
 const googleRoutes = require('./routes/google');
+const statsRoutes = require('./routes/stats');
+
 const deadlineChecker = require('./jobs/deadlineChecker');
 
 const app = express();
@@ -32,6 +34,8 @@ app.use('/tasks', taskRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/push', pushRoutes);
 app.use('/google', googleRoutes);
+app.use('/stats', statsRoutes);
+
 
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
