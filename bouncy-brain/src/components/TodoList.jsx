@@ -17,7 +17,8 @@ export default function TodoList(){
   async function load(){
     try {
       const res = await api.get("/tasks");
-      setTasks(res.tasks || []);
+          setTasks((res.tasks || []).filter(t => !t.completed));   // << ADD THIS
+
     } catch(e){ setTasks([]); }
   }
 
