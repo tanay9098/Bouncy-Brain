@@ -73,7 +73,7 @@ export default function FocusTimer(){
   return (
     <div className="app">
       <div className="page-header">
-        <h2>Bouncy <Brain></Brain></h2>
+        <h2>Bouncy Brain</h2>
         <div className="small">Soft pastel timer for calm sessions</div>
       </div>
 
