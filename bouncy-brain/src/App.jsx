@@ -1,6 +1,8 @@
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Auth from "./components/Auth";
+import Calendar from "./components/Calendar";
+
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import FocusTimer from "./components/FocusTimer";
@@ -39,6 +41,7 @@ export default function App(){
           <Link to="/todo">Todo</Link>
           <Link to="/mindful">Mindfulness</Link>
           <Link to="/deadline">Deadlines</Link>
+
           {user ? <button onClick={logout}>Logout</button> : <Link to="/auth">Login</Link>}
         </div>
       </nav>
@@ -55,6 +58,8 @@ export default function App(){
           <Route path="/todo" element={<ProtectedRoute><TodoList/></ProtectedRoute>} />
           <Route path="/mindful" element={<ProtectedRoute><Mindfulness/></ProtectedRoute>} />
           <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer/></ProtectedRoute>} />
+                    <Route path="/calendar" element={<ProtectedRoute><Calendar/></ProtectedRoute>} />
+
         </Routes>
       </main>
     </div>

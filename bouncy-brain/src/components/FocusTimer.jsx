@@ -80,12 +80,6 @@ export default function FocusTimer(){
   }
   function fmt(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss<10? '0'+ss: ss}`; }
 
-  async function connectGoogle(){
-    try {
-      const res = await api.get("/google/authurl");
-      if(res.url) window.open(res.url, "_blank");
-    } catch(e){ alert("Connect failed"); }
-  }
 
   return (
     <div className="app">
@@ -115,12 +109,7 @@ export default function FocusTimer(){
             </div>
           )}
 
-          {mode === 'deadline' && (
-            <div style={{marginBottom:8}}>
-              <button className="btn" onClick={connectGoogle}>Connect Google Calendar</button>
-              <div className="small" style={{marginTop:8}}>When connected you can sync deadlines (backend required)</div>
-            </div>
-          )}
+          
 
           <div className="timer-large card">{fmt(seconds)}</div>
 
