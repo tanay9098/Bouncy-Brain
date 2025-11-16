@@ -10,6 +10,12 @@ import DeadlineTimer from "./components/DeadlineTimer";
 import { useUser } from "./contexts/UserContext";
 
 export default function App(){
+  function ProtectedRoute({ children }) {
+  const { user } = useUser();
+  if (!user) return <Auth />;
+  return children;
+}
+
   const { user, setUser, setToken } = useUser();
 
   function logout(){
@@ -39,13 +45,16 @@ export default function App(){
 
       <main>
         <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/auth" element={<Auth/>} />
-          <Route path="/dashboard" element={<Dashboard/>} />
-          <Route path="/focus" element={<FocusTimer/>} />
-          <Route path="/todo" element={<TodoList/>} />
-          <Route path="/mindful" element={<Mindfulness/>} />
-          <Route path="/deadline" element={<DeadlineTimer/>} />
+                              <Route path="/auth" element={<Auth/>} />
+
+          <Route path="/" element={<ProtectedRoute><Home/></ProtectedRoute>} />
+
+          
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard/></ProtectedRoute>} />
+          <Route path="/focus" element={<ProtectedRoute><FocusTimer/></ProtectedRoute>} />
+          <Route path="/todo" element={<ProtectedRoute><TodoList/></ProtectedRoute>} />
+          <Route path="/mindful" element={<ProtectedRoute><Mindfulness/></ProtectedRoute>} />
+          <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer/></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
