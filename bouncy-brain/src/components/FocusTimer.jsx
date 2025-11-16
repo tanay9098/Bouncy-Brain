@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Affirmations from "./Affirmations";
+import { tabAlertSound } from "../utils/sound";
+
 import { api } from "../api";
 
 const MODES = {
@@ -34,6 +36,7 @@ export default function FocusTimer(){
   useEffect(()=>{
     function onVisibility(){
       if(document.visibilityState === 'hidden' && active){
+        tabAlertSound.play();
         if(affirmRef.current) affirmRef.current.messageForContext('tab-change');
         setActive(false);
       }
