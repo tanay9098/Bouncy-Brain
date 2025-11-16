@@ -6,6 +6,7 @@ const taskSchema = new mongoose.Schema({
   dueAt: Date,
   estimateMins: Number,
   completed: { type: Boolean, default: false },
+  completedAt: Date,
   subtasks: [{ title: String, completed: { type: Boolean, default: false } }],
   importance: { type: Number, default: 1 },
   createdAt: { type: Date, default: Date.now }
