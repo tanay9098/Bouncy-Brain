@@ -33,10 +33,24 @@ export default function FocusTimer(){
     return ()=> clearInterval(intervalRef.current);
   }, [active, seconds]);
 
+  useEffect(() => {
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+}, []);
+
+
   useEffect(()=>{
     function onVisibility(){
       if(document.visibilityState === 'hidden' && active){
         tabAlertSound.play();
+
+        if (Notification.permission === "granted") {
+    new Notification("Stay Focused", {
+      body: "You switched tabs. Let's get back to your session.",
+      icon: "/focus-icon.png"
+    });
+  }
         if(affirmRef.current) affirmRef.current.messageForContext('tab-change');
         setActive(false);
       }
