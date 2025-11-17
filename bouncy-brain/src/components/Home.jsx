@@ -26,6 +26,8 @@ export default function Home(){
             <Link to="/todo"><button className="btn secondary">Open Todo</button></Link>
             <Link to="/mindful"><button className="btn secondary">Mindfulness</button></Link>
             <Link to="/deadline"><button className="btn secondary">Deadlines</button></Link>
+            
+
           </div>
         </aside>
       </div>
