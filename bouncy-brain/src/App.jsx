@@ -41,6 +41,7 @@ export default function App(){
           <Link to="/todo">Todo</Link>
           <Link to="/mindful">Mindfulness</Link>
           <Link to="/deadline">Deadlines</Link>
+          <Link to="/calendar">Calendar</Link>
 
           {user ? <button onClick={logout}>Logout</button> : <Link to="/auth">Login</Link>}
         </div>
