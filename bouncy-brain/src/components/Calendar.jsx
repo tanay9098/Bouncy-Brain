@@ -20,6 +20,23 @@ export default function Calendar() {
   }
 
   useEffect(() => { load(); }, []);
+  function handleDateClick(info) {
+  // open modal for creating a task with that date
+  const date = info.dateStr;
+  const title = prompt("Task name?");
+  if (!title) return;
+
+  api.post("/tasks", { title, dueAt: date });
+  load();
+}
+
+function handleEventClick(info) {
+  const newDate = prompt("Update deadline (YYYY-MM-DD HH:mm)?", info.event.startStr);
+  if (!newDate) return;
+  api.put(`/tasks/${info.event.id}`, { dueAt: newDate });
+  load();
+}
+
 
   return (
     <div className="app">
@@ -30,6 +47,11 @@ export default function Calendar() {
 
       <div className="card">
         <FullCalendar
+          dateClick={handleDateClick}
+  
+  
+          eventClick={handleEventClick}
+
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           events={events}

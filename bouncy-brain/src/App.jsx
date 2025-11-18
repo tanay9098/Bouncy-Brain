@@ -13,7 +13,10 @@ import { useUser } from "./contexts/UserContext";
 
 export default function App(){
   function ProtectedRoute({ children }) {
-  const { user } = useUser();
+  const { user, loading } = useUser();
+
+  if (loading) return null;  // or a spinner
+
   if (!user) return <Auth />;
   return children;
 }
