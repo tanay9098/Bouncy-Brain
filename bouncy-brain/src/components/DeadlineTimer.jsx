@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { api } from "../api";
 
 export default function DeadlineTimer(){
+  const navigate = useNavigate();
+
   const [tasks, setTasks] = useState([]);
 
   useEffect(()=>{ load(); }, []);
@@ -19,13 +23,27 @@ export default function DeadlineTimer(){
       <div className="main-grid">
         <div className="card">
           {tasks.length === 0 ? (
-            <div className="small">No deadlines found</div>
-          ) : tasks.map(t=>(
-            <div key={t._id} style={{padding:'10px 0', borderBottom:'1px dashed #eee'}}>
-              <div style={{fontWeight:700}}>{t.title}</div>
-              <div className="meta">{new Date(t.dueAt).toLocaleString()}</div>
-            </div>
-          ))}
+  <div className="small">No deadlines found</div>
+) : (
+  tasks.map(t => (
+    <div key={t._id} style={{ padding: "10px 0", borderBottom: "1px dashed #eee" }}>
+      <div style={{ fontWeight: 700 }}>{t.title}</div>
+      <div className="meta">{new Date(t.dueAt).toLocaleString()}</div>
+
+      <button
+        className="btn secondary"
+        style={{ marginTop: 8 }}
+        onClick={() => (window.location.href = `/calendar?task=${t._id}`)}
+      >
+        Change Deadline
+      </button>
+    </div>
+  ))
+)}
+
+
+  
+
         </div>
 
         <aside className="card">
