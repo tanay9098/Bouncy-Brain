@@ -1,0 +1,45 @@
+task_type,subject_importance,deadline_days,estimated_time,difficulty,urgency_self,energy_required,self_reported_procrastination,completion_status,actual_time_vs_estimate,energy_at_attempt,priority
+Assignment,Core,1,60,4,5,High,4,Completed but late,Slightly more,Low,High
+Exam Preparation,Core,0,120,5,5,High,5,Started but not completed,Much more,Low,High
+Project,Core,2,90,4,4,High,4,Completed on time,Same as estimated,Medium,High
+Assignment,Core,1,45,3,5,High,4,Completed but late,Slightly more,Low,High
+Revision / Practice,Core,2,60,3,4,Medium,3,Completed on time,Same as estimated,Medium,High
+Assignment,Secondary,3,60,3,4,Medium,3,Completed on time,Same as estimated,Medium,Medium
+Assignment,Secondary,4,90,3,3,Medium,3,Completed but late,Slightly more,Low,Medium
+Project,Secondary,5,120,4,3,High,3,Started but not completed,Much more,Low,Medium
+Revision / Practice,Secondary,6,60,3,3,Medium,3,Completed on time,Same as estimated,Medium,Medium
+Exam Preparation,Secondary,4,90,4,4,High,4,Completed but late,Much more,Low,High
+Reading / Notes,Optional,7,45,2,2,Low,2,Completed on time,Less than estimated,High,Low
+Reading / Notes,Optional,10,60,1,1,Low,1,Completed on time,Less than estimated,High,Low
+Assignment,Optional,8,30,1,1,Low,1,Did not start,Same as estimated,Low,Low
+Revision / Practice,Optional,12,60,2,1,Low,1,Completed on time,Less than estimated,High,Low
+Project,Optional,14,90,2,2,Medium,2,Started but not completed,Much more,Low,Low
+Assignment,Core,2,60,4,4,High,4,Completed but late,Slightly more,Low,High
+Assignment,Core,3,90,4,4,High,4,Completed on time,Same as estimated,Medium,High
+Exam Preparation,Core,1,120,5,5,High,5,Started but not completed,Much more,Low,High
+Revision / Practice,Core,2,45,3,4,Medium,3,Completed on time,Same as estimated,Medium,High
+Project,Core,3,120,5,4,High,4,Started but not completed,Much more,Low,High
+Assignment,Secondary,5,60,3,3,Medium,3,Completed on time,Same as estimated,Medium,Medium
+Revision / Practice,Secondary,6,90,3,3,Medium,3,Completed on time,Same as estimated,Medium,Medium
+Project,Secondary,7,120,4,3,High,3,Started but not completed,Much more,Low,Medium
+Exam Preparation,Secondary,3,90,4,4,High,4,Completed but late,Much more,Low,High
+Reading / Notes,Optional,15,30,1,1,Low,1,Completed on time,Less than estimated,High,Low
+Assignment,Optional,10,45,1,1,Low,1,Did not start,Same as estimated,Low,Low
+Revision / Practice,Optional,12,60,2,1,Low,1,Completed on time,Less than estimated,High,Low
+Project,Optional,20,120,2,2,Medium,2,Started but not completed,Much more,Low,Low
+Exam Preparation,Optional,14,90,2,2,Medium,2,Completed but late,Slightly more,Low,Low
+Assignment,Core,1,30,3,5,Medium,4,Completed on time,Slightly more,Medium,High
+Assignment,Core,0,60,4,5,High,5,Started but not completed,Much more,Low,High
+Revision / Practice,Core,2,60,3,4,Medium,3,Completed on time,Same as estimated,Medium,High
+Project,Core,1,120,5,5,High,5,Started but not completed,Much more,Low,High
+Exam Preparation,Core,2,90,4,4,High,4,Completed but late,Much more,Low,High
+Assignment,Secondary,4,60,3,3,Medium,3,Completed on time,Same as estimated,Medium,Medium
+Revision / Practice,Secondary,5,45,2,3,Low,2,Completed on time,Less than estimated,High,Medium
+Reading / Notes,Secondary,6,30,1,2,Low,1,Completed on time,Less than estimated,High,Low
+Project,Secondary,8,120,3,3,High,3,Started but not completed,Much more,Low,Medium
+Exam Preparation,Secondary,6,90,4,4,High,4,Completed but late,Much more,Low,High
+Assignment,Optional,10,30,1,1,Low,1,Did not start,Same as estimated,Low,Low
+Revision / Practice,Optional,12,45,2,1,Low,1,Completed on time,Less than estimated,High,Low
+Project,Optional,15,120,2,2,Medium,2,Started but not completed,Much more,Low,Low
+Exam Preparation,Optional,14,90,2,2,Medium,2,Completed but late,Slightly more,Low,Low
+Reading / Notes,Optional,20,30,1,1,Low,1,Completed on time,Less than estimated,High,Low
