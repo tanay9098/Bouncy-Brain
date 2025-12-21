@@ -13,6 +13,8 @@ const pushRoutes = require('./routes/push');
 const statsRoutes = require('./routes/stats');
 
 const deadlineChecker = require('./jobs/deadlineChecker');
+const priorityRoutes = require("./routes/priority");
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -34,6 +36,8 @@ app.use('/tasks', taskRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/push', pushRoutes);
 app.use('/stats', statsRoutes);
+
+app.use("/priority", priorityRoutes);
 
 
 // health

@@ -48,9 +48,12 @@ export default function TodoList(){
   }
 
   async function aiPrioritize(){
-    // For now: sort by due date client-side; replace by ML backend call
-    const ordered = tasks.slice().sort((a,b)=> (new Date(a.dueAt)||Infinity) - (new Date(b.dueAt)||Infinity));
-    setTasks(ordered);
+    try {
+    const res = await api.post("/priority/prioritize");
+    setTasks(res.tasks || []);
+  } catch (e) {
+    alert("AI prioritization failed");
+  }
   }
 
   return (
