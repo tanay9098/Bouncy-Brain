@@ -8,6 +8,12 @@ export default function TodoList(){
   const [estimate,setEstimate] = useState(30);
   const [aiSuggest, setAiSuggest] = useState(null);
 
+  const [editingId, setEditingId] = useState(null);
+const [editTitle, setEditTitle] = useState("");
+const [editDue, setEditDue] = useState("");
+const [editEstimate, setEditEstimate] = useState(30);
+
+
   useEffect(()=>{
     async function fetchData(){
       await load();
@@ -56,6 +62,22 @@ export default function TodoList(){
   }
   }
 
+  async function saveEdit(id) {
+  try {
+    await api.put(`/tasks/${id}`, {
+      title: editTitle,
+      dueAt: editDue || null,
+      estimateMins: Number(editEstimate)
+    });
+
+    setEditingId(null);
+    load();
+  } catch {
+    alert("Failed to update task");
+  }
+}
+
+
   return (
     <div className="app">
       <div className="page-header">
@@ -80,13 +102,60 @@ export default function TodoList(){
             {tasks.map(t=>(
               <li className="todo-item" key={t._id}>
                 <div>
-                  <div style={{fontWeight:700}}>{t.title}</div>
+                  {editingId === t._id ? (
+  <>
+    <input
+      className="input"
+      value={editTitle}
+      onChange={e => setEditTitle(e.target.value)}
+    />
+
+    <input
+      className="input"
+      type="datetime-local"
+      value={editDue}
+      onChange={e => setEditDue(e.target.value)}
+    />
+
+    <input
+      className="input"
+      type="number"
+      value={editEstimate}
+      onChange={e => setEditEstimate(e.target.value)}
+    />
+
+    <div style={{ marginTop: 8 }}>
+      <button className="btn" onClick={() => saveEdit(t._id)}>Save</button>
+      <button className="btn secondary" onClick={() => setEditingId(null)}>Cancel</button>
+    </div>
+  </>
+) : (
+  <>
+    <div style={{fontWeight:700}}>{t.title}</div>
+    <div className="meta">
+      {t.dueAt ? new Date(t.dueAt).toLocaleString() : "No due date"}
+    </div>
+  </>
+)}
+
                   <div className="meta">{t.dueAt ? new Date(t.dueAt).toLocaleString() : 'No due date'}</div>
                   {t.subtasks?.length && <ul style={{marginTop:8}}>{t.subtasks.map((s,i)=><li key={i} className="small">• {s.title}</li>)}</ul>}
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
                   <button className="btn" onClick={()=>complete(t._id)}>Complete</button>
                   <button className="btn secondary" onClick={()=>autoChunk(t)}>Auto-chunk</button>
+                  <button
+  className="btn secondary"
+  onClick={() => {
+    setEditingId(t._id);
+    setEditTitle(t.title);
+    setEditDue(t.dueAt ? t.dueAt.slice(0,16) : "");
+    setEditEstimate(t.estimateMins || 30);
+  }}
+>
+  Edit
+</button>
+
                 </div>
               </li>
             ))}

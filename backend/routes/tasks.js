@@ -17,6 +17,25 @@ router.get('/', auth, async (req,res)=>{
   res.json({ tasks });
 });
 
+// UPDATE task (edit title, dueAt, estimate)
+router.put('/:id', auth, async (req, res) => {
+  const { title, dueAt, estimateMins } = req.body;
+
+  const task = await Task.findOneAndUpdate(
+    { _id: req.params.id, userId: req.userId },
+    {
+      title,
+      dueAt: dueAt ? new Date(dueAt) : null,
+      estimateMins
+    },
+    { new: true }
+  );
+
+  if (!task) return res.status(404).json({ error: 'Task not found' });
+  res.json({ task });
+});
+
+
 router.post('/', auth, async (req,res)=>{
   const { title, dueAt, estimateMins } = req.body;
   const doc = await Task.create({ userId: req.userId, title, dueAt: dueAt ? new Date(dueAt) : null, estimateMins });
