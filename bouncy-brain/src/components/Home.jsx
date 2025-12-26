@@ -1,7 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+import { useEffect } from "react";
+import { notify } from "../utils/notify";
+
+
 export default function Home(){
+  useEffect(() => {
+  const hour = new Date().getHours();
+
+  if (hour >= 7 && hour <= 11) {
+    notify(
+      "🌅 Good morning",
+      "Pick 2 tasks. Start small. Consistency wins."
+    );
+  }
+}, []);
   return (
     <div className="app">
       <div className="page-header">

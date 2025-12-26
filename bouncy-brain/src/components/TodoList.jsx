@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
 
+import { notify } from "../utils/notify";
+
+import {
+  scheduleDeadline,
+  clearDeadline
+} from "../utils/deadlineScheduler";
+
+
 export default function TodoList(){
   const [tasks, setTasks] = useState([]);
   const [title,setTitle] = useState("");
@@ -12,6 +20,19 @@ export default function TodoList(){
 const [editTitle, setEditTitle] = useState("");
 const [editDue, setEditDue] = useState("");
 const [editEstimate, setEditEstimate] = useState(30);
+const [reminderMsg, setReminderMsg] = useState("");
+
+  useEffect(() => {
+  tasks.forEach(task => {
+    if (task.dueAt && !task.completed) {
+      scheduleDeadline(task);
+    }
+  });
+
+  return () => {
+    tasks.forEach(task => clearDeadline(task._id));
+  };
+}, [tasks]);
 
 
   useEffect(()=>{
@@ -20,6 +41,28 @@ const [editEstimate, setEditEstimate] = useState(30);
     }
 
    fetchData();}, []);
+
+   useEffect(() => {
+  const interval = setInterval(() => {
+    tasks.forEach(t => {
+      if (!t.dueAt || t.completed) return;
+
+      const minsLeft =
+        (new Date(t.dueAt) - new Date()) / 60000;
+
+      if (minsLeft > 0 && minsLeft <= 30) {
+        notify(
+          "⏰ Deadline approaching",
+          t.customReminderMessage ||
+          `${t.title} is due in ${Math.ceil(minsLeft)} minutes`
+        );
+      }
+    });
+  }, 5 * 60 * 1000); // every 5 min
+
+  return () => clearInterval(interval);
+}, [tasks]);
+
   async function load(){
     try {
       const res = await api.get("/tasks");
@@ -28,17 +71,52 @@ const [editEstimate, setEditEstimate] = useState(30);
     } catch(e){ setTasks([]); }
   }
 
-  async function add(){
-    try {
-      await api.post("/tasks", { title, dueAt: due || null, estimateMins: Number(estimate) });
-      setTitle(""); setDue(""); setEstimate(30);
-      load();
-    } catch(e){ alert("Could not add task"); }
-  }
+  async function add() {
+  try {
+    const res = await api.post("/tasks", {
+      title,
+      dueAt: due || null,
+      estimateMins: Number(estimate),
+      customReminderMessage: reminderMsg
+    });
 
-  async function complete(id){
-    try { await api.put(`/tasks/${id}/complete`, {}); load(); } catch(e){ }
+    const task = res.task;
+
+    // 🔔 Schedule notification if deadline exists
+    if (task?.dueAt) {
+      scheduleDeadline(task);
+
+      notify(
+        "📅 Deadline set",
+        `You'll be reminded when "${task.title}" is due.`
+      );
+    }
+
+    setTitle("");
+    setDue("");
+    setEstimate(30);
+    setReminderMsg("");
+    load();
+  } catch {
+    alert("Could not add task");
   }
+}
+
+
+ async function complete(id) {
+  try {
+    await api.put(`/tasks/${id}/complete`, {});
+
+    clearDeadline(id);
+
+    notify(
+      "✅ Task completed",
+      "Well done. One less thing to worry about."
+    );
+
+    load();
+  } catch {}
+}
 
   async function autoChunk(t){
     try {
