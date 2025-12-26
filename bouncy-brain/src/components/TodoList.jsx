@@ -3,6 +3,11 @@ import { api } from "../api";
 
 import { notify } from "../utils/notify";
 
+import {
+  scheduleDeadline,
+  clearDeadline
+} from "../utils/deadlineScheduler";
+
 
 export default function TodoList(){
   const [tasks, setTasks] = useState([]);
@@ -17,6 +22,17 @@ const [editDue, setEditDue] = useState("");
 const [editEstimate, setEditEstimate] = useState(30);
 const [reminderMsg, setReminderMsg] = useState("");
 
+  useEffect(() => {
+  tasks.forEach(task => {
+    if (task.dueAt && !task.completed) {
+      scheduleDeadline(task);
+    }
+  });
+
+  return () => {
+    tasks.forEach(task => clearDeadline(task._id));
+  };
+}, [tasks]);
 
 
   useEffect(()=>{
@@ -55,21 +71,49 @@ const [reminderMsg, setReminderMsg] = useState("");
     } catch(e){ setTasks([]); }
   }
 
-  async function add(){
-    try {
-      await api.post("/tasks", { title, dueAt: due || null, estimateMins: Number(estimate) });
-      setTitle(""); setDue(""); setEstimate(30);
-      load();
-    } catch(e){ alert("Could not add task"); }
+  async function add() {
+  try {
+    const res = await api.post("/tasks", {
+      title,
+      dueAt: due || null,
+      estimateMins: Number(estimate),
+      customReminderMessage: reminderMsg
+    });
+
+    const task = res.task;
+
+    // 🔔 Schedule notification if deadline exists
+    if (task?.dueAt) {
+      scheduleDeadline(task);
+
+      notify(
+        "📅 Deadline set",
+        `You'll be reminded when "${task.title}" is due.`
+      );
+    }
+
+    setTitle("");
+    setDue("");
+    setEstimate(30);
+    setReminderMsg("");
+    load();
+  } catch {
+    alert("Could not add task");
   }
+}
+
 
  async function complete(id) {
   try {
     await api.put(`/tasks/${id}/complete`, {});
+
+    clearDeadline(id);
+
     notify(
       "✅ Task completed",
-      "Good work. Keep the momentum going."
+      "Well done. One less thing to worry about."
     );
+
     load();
   } catch {}
 }

@@ -9,7 +9,7 @@ export default function Home(){
   useEffect(() => {
   const hour = new Date().getHours();
 
-  if (hour >= 7 && hour <= 9) {
+  if (hour >= 7 && hour <= 11) {
     notify(
       "🌅 Good morning",
       "Pick 2 tasks. Start small. Consistency wins."
