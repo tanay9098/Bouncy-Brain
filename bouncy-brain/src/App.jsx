@@ -1,4 +1,7 @@
 import React from "react";
+
+import { useEffect } from "react";
+
 import { Routes, Route, Link } from "react-router-dom";
 import Auth from "./components/Auth";
 import Calendar from "./components/Calendar";
@@ -22,6 +25,14 @@ export default function App(){
 }
 
   const { user, setUser, setToken } = useUser();
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+
+
 
   function logout(){
     setUser(null); setToken(null);

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../api";
 
+import { notify } from "../utils/notify";
+
+
 export default function TodoList(){
   const [tasks, setTasks] = useState([]);
   const [title,setTitle] = useState("");
@@ -12,6 +15,8 @@ export default function TodoList(){
 const [editTitle, setEditTitle] = useState("");
 const [editDue, setEditDue] = useState("");
 const [editEstimate, setEditEstimate] = useState(30);
+const [reminderMsg, setReminderMsg] = useState("");
+
 
 
   useEffect(()=>{
@@ -20,6 +25,28 @@ const [editEstimate, setEditEstimate] = useState(30);
     }
 
    fetchData();}, []);
+
+   useEffect(() => {
+  const interval = setInterval(() => {
+    tasks.forEach(t => {
+      if (!t.dueAt || t.completed) return;
+
+      const minsLeft =
+        (new Date(t.dueAt) - new Date()) / 60000;
+
+      if (minsLeft > 0 && minsLeft <= 30) {
+        notify(
+          "⏰ Deadline approaching",
+          t.customReminderMessage ||
+          `${t.title} is due in ${Math.ceil(minsLeft)} minutes`
+        );
+      }
+    });
+  }, 5 * 60 * 1000); // every 5 min
+
+  return () => clearInterval(interval);
+}, [tasks]);
+
   async function load(){
     try {
       const res = await api.get("/tasks");
@@ -36,9 +63,16 @@ const [editEstimate, setEditEstimate] = useState(30);
     } catch(e){ alert("Could not add task"); }
   }
 
-  async function complete(id){
-    try { await api.put(`/tasks/${id}/complete`, {}); load(); } catch(e){ }
-  }
+ async function complete(id) {
+  try {
+    await api.put(`/tasks/${id}/complete`, {});
+    notify(
+      "✅ Task completed",
+      "Good work. Keep the momentum going."
+    );
+    load();
+  } catch {}
+}
 
   async function autoChunk(t){
     try {

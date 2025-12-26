@@ -8,10 +8,29 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+import { notify } from "../utils/notify";
+
+
+
+
+
 export default function Dashboard() {
   const [daily, setDaily] = useState({});
   const [weekly, setWeekly] = useState([]);
   const [monthly, setMonthly] = useState([]);
+
+  useEffect(() => {
+  const hour = new Date().getHours();
+
+  if (hour >= 21) {
+    notify(
+      "🌙 Day summary",
+      daily.tasksCompleted > 0
+        ? `You completed ${daily.tasksCompleted} tasks today. Solid effort.`
+        : "Not your best day—and that's okay. Tomorrow resets."
+    );
+  }
+}, [daily]);
 
   useEffect(() => {
     load();
