@@ -51,13 +51,6 @@ router.put('/:id/complete', auth, async (req,res)=>{
   });
   res.json({ ok: true });
 });
-
-router.get('/:id', auth, async (req,res)=>{
-  const t = await Task.findById(req.params.id);
-  res.json({ task: t });
-});
-
-// auto-chunk placeholder: ideally call ML_CHUNK_URL
 router.post('/:id/auto-chunk', auth, async (req,res)=>{
   const task = await Task.findById(req.params.id);
   if(!task) return res.status(404).json({ error: 'not found' });
@@ -85,6 +78,14 @@ router.post('/:id/auto-chunk', auth, async (req,res)=>{
   task.subtasks = chunks.map(c => ({ title: c.title, completed: false }));
   await task.save();
   res.json({ task });
+
+router.get('/:id', auth, async (req,res)=>{
+  const t = await Task.findById(req.params.id);
+  res.json({ task: t });
+});
+
+// auto-chunk placeholder: ideally call ML_CHUNK_URL
+
 });
 
 module.exports = router;
