@@ -9,6 +9,8 @@ const taskSchema = new mongoose.Schema({
   completedAt: Date,
   subtasks: [{ title: String, completed: { type: Boolean, default: false } }],
   importance: { type: Number, default: 1 },
+  dreadScore: { type: Number, default: 3, min: 1, max: 5 },
+  aiPriority: { type: String, enum: ['High', 'Medium', 'Low', null], default: null },
   createdAt: { type: Date, default: Date.now }
 });
 
