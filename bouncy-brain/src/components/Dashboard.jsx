@@ -1,49 +1,53 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
 import {
   BarChart, Bar,
   LineChart, Line,
   XAxis, YAxis,
   Tooltip, CartesianGrid,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from "recharts";
 
-import { notify } from "../utils/notify";
-
-
-
-
-
 export default function Dashboard() {
-  const [daily, setDaily] = useState({});
+  const [daily, setDaily] = useState({ tasksCompleted: 0, totalSessionMins: 0 });
   const [weekly, setWeekly] = useState([]);
   const [monthly, setMonthly] = useState([]);
+  const [streak, setStreak] = useState(0);
+  const [totalCompleted, setTotalCompleted] = useState(0);
 
-  useEffect(() => {
-  const hour = new Date().getHours();
-
-  if (hour >= 21) {
-    notify(
-      "🌙 Day summary",
-      daily.tasksCompleted > 0
-        ? `You completed ${daily.tasksCompleted} tasks today. Solid effort.`
-        : "Not your best day—and that's okay. Tomorrow resets."
-    );
-  }
-}, [daily]);
-
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function load() {
-    const d = await api.get("/stats/daily");
-    const w = await api.get("/stats/weekly");
-    const m = await api.get("/stats/monthly");
+    try {
+      const [d, w, m] = await Promise.all([
+        api.get("/stats/daily"),
+        api.get("/stats/weekly"),
+        api.get("/stats/monthly"),
+      ]);
 
-    setDaily(d);
-    setWeekly(processWeekly(w.tasks, w.sessions));
-    setMonthly(processMonthly(m.tasks, m.sessions));
+      setDaily(d);
+
+      const weekData = processWeekly(w.tasks || [], w.sessions || []);
+      setWeekly(weekData);
+      setMonthly(processMonthly(m.tasks || [], m.sessions || []));
+
+      // Streak: consecutive days with at least 1 completed task
+      const byDay = {};
+      (w.tasks || []).forEach((t) => {
+        const key = t.completedAt?.split("T")[0];
+        if (key) byDay[key] = true;
+      });
+      let s = 0;
+      for (let i = 0; i < 7; i++) {
+        const dt = new Date();
+        dt.setDate(dt.getDate() - i);
+        const key = dt.toISOString().split("T")[0];
+        if (byDay[key]) s++;
+        else if (i > 0) break;
+      }
+      setStreak(s);
+      setTotalCompleted(weekData.reduce((acc, d) => acc + d.tasks, 0));
+    } catch {}
   }
 
   function processWeekly(tasks, sessions) {
@@ -52,19 +56,17 @@ export default function Dashboard() {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split("T")[0];
-      map[key] = { date: key, tasks: 0, minutes: 0 };
+      const label = d.toLocaleDateString("en", { weekday: "short" });
+      map[key] = { date: label, tasks: 0, minutes: 0 };
     }
-
-    tasks.forEach(t => {
-      const key = t.completedAt.split("T")[0];
+    tasks.forEach((t) => {
+      const key = t.completedAt?.split("T")[0];
       if (map[key]) map[key].tasks++;
     });
-
-    sessions.forEach(s => {
-      const key = s.completedAt.split("T")[0];
-      if (map[key]) map[key].minutes += s.durationMins;
+    sessions.forEach((s) => {
+      const key = s.completedAt?.split("T")[0];
+      if (map[key]) map[key].minutes += s.durationMins || 0;
     });
-
     return Object.values(map);
   }
 
@@ -74,67 +76,119 @@ export default function Dashboard() {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split("T")[0];
-      map[key] = { date: key, tasks: 0, minutes: 0 };
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      map[key] = { date: label, tasks: 0, minutes: 0 };
     }
-
-    tasks.forEach(t => {
-      const key = t.completedAt.split("T")[0];
+    tasks.forEach((t) => {
+      const key = t.completedAt?.split("T")[0];
       if (map[key]) map[key].tasks++;
     });
-
-    sessions.forEach(s => {
-      const key = s.completedAt.split("T")[0];
-      if (map[key]) map[key].minutes += s.durationMins;
+    sessions.forEach((s) => {
+      const key = s.completedAt?.split("T")[0];
+      if (map[key]) map[key].minutes += s.durationMins || 0;
     });
-
     return Object.values(map);
   }
 
+  const tooltipStyle = {
+    backgroundColor: "var(--card)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    color: "var(--text)",
+    fontSize: 13,
+  };
+
   return (
-    <div className="app">
-      <div className="page-header">
-        <h2>Performance Dashboard</h2>
-        <p className="small">Track your focus & productivity over time</p>
+    <div>
+      <h1 className="page-title">Stats</h1>
+      <p className="page-subtitle">Track focus, tasks, and streaks over time</p>
+
+      {/* ── Top stat tiles ─────────────────────────────────── */}
+      <div className="grid-4 mb-4">
+        <div className="stat-tile">
+          <div className="stat-value stat-green">{daily.tasksCompleted ?? 0}</div>
+          <div className="stat-label">Tasks today</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-value stat-violet">{daily.totalSessionMins ?? 0}</div>
+          <div className="stat-label">Focus mins today</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-value stat-amber">
+            {streak > 0 ? `${streak}🔥` : "0"}
+          </div>
+          <div className="stat-label">Day streak</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-value" style={{ color: "var(--text)" }}>{totalCompleted}</div>
+          <div className="stat-label">Tasks this week</div>
+        </div>
       </div>
 
-      <div className="main-grid">
-        
-        {/* Today Summary */}
-        <div className="card">
-          <h3>Today</h3>
-          <p><b>Tasks Completed:</b> {daily.tasksCompleted}</p>
-          <p><b>Focus Minutes:</b> {daily.totalSessionMins}</p>
-        </div>
+      {/* ── Weekly bar chart ────────────────────────────────── */}
+      <div className="card mb-4">
+        <div className="card-title">Tasks Completed — Last 7 Days</div>
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={weekly} barSize={28}>
+            <XAxis
+              dataKey="date"
+              tick={{ fill: "var(--muted)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: "var(--muted)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              cursor={{ fill: "var(--violet-dim)" }}
+            />
+            <Bar dataKey="tasks" fill="var(--violet)" radius={[4, 4, 0, 0]} name="Tasks" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-        {/* Weekly Chart */}
-        <div className="card">
-          <h3>This Week</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={weekly}>
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <CartesianGrid strokeDasharray="3 3" />
-              <Bar dataKey="tasks" fill="#a8dadc" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Monthly Chart */}
-        <div className="card">
-          <h3>Monthly Trend</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={monthly}>
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <CartesianGrid stroke="#eee" />
-              <Line type="monotone" dataKey="tasks" stroke="#457b9d" />
-              <Line type="monotone" dataKey="minutes" stroke="#e76f51" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
+      {/* ── Monthly trend ────────────────────────────────────── */}
+      <div className="card">
+        <div className="card-title">30-Day Trend — Tasks & Focus Minutes</div>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={monthly}>
+            <XAxis
+              dataKey="date"
+              tick={{ fill: "var(--muted)", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              interval={4}
+            />
+            <YAxis
+              tick={{ fill: "var(--muted)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+            />
+            <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Line
+              type="monotone"
+              dataKey="tasks"
+              stroke="var(--violet-light)"
+              strokeWidth={2}
+              dot={false}
+              name="Tasks"
+            />
+            <Line
+              type="monotone"
+              dataKey="minutes"
+              stroke="var(--green)"
+              strokeWidth={2}
+              dot={false}
+              name="Focus mins"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

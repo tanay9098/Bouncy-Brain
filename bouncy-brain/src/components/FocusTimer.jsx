@@ -1,131 +1,264 @@
 import React, { useEffect, useRef, useState } from "react";
-import Affirmations from "./Affirmations";
-import { tabAlertSound } from "../utils/sound";
-
 import { api } from "../api";
+import { setFocusActive } from "./FocusOverlay";
+import Affirmations from "./Affirmations";
 
-const MODES = {
-  pomodoro: { work:25, brk:5, label:"Pomodoro" },
-  deep: { work:50, brk:10, label:"Deep Work" },
-  deadline: { work:30, brk:5, label:"Deadline" }
-};
+const CIRCUMFERENCE = 2 * Math.PI * 90; // r = 90
 
-export default function FocusTimer(){
-  const [mode, setMode] = useState("pomodoro");
-  const [workMins, setWorkMins] = useState(MODES.pomodoro.work);
-  const [breakMins,setBreakMins] = useState(MODES.pomodoro.brk);
+const MODES = [
+  { id: "pomodoro", label: "Pomodoro", work: 25, brk: 5 },
+  { id: "deep",     label: "Deep Work", work: 50, brk: 10 },
+  { id: "custom",   label: "Custom",    work: 30, brk: 5 },
+];
+
+export default function FocusTimer() {
+  const [modeIdx, setModeIdx] = useState(0);
+  const [workMins, setWorkMins] = useState(25);
+  const [breakMins, setBreakMins] = useState(5);
   const [isWork, setIsWork] = useState(true);
-  const [seconds, setSeconds] = useState(workMins*60);
+  const [seconds, setSeconds] = useState(25 * 60);
   const [active, setActive] = useState(false);
-  const intervalRef = useRef();
+  const [sessionCount, setSessionCount] = useState(0);
+  const [reward, setReward] = useState(null);
   const affirmRef = useRef();
+  const intervalRef = useRef();
 
-  useEffect(()=> setSeconds((isWork?workMins:breakMins)*60), [workMins,breakMins,isWork]);
+  const totalSecs = (isWork ? workMins : breakMins) * 60;
+  const progress = totalSecs > 0 ? 1 - seconds / totalSecs : 0;
+  const dashOffset = CIRCUMFERENCE * (1 - progress);
 
-  useEffect(()=>{
-    if(active && seconds>0){
-      intervalRef.current = setInterval(()=> setSeconds(s=>s-1), 1000);
-    } else if(seconds===0 && active){
+  // Apply preset when mode tab changes (not custom)
+  useEffect(() => {
+    const m = MODES[modeIdx];
+    if (m.id !== "custom") {
+      setWorkMins(m.work);
+      setBreakMins(m.brk);
+      reset(m.work, m.brk);
+    }
+  }, [modeIdx]);
+
+  // Countdown tick
+  useEffect(() => {
+    if (active && seconds > 0) {
+      intervalRef.current = setInterval(() => setSeconds((s) => s - 1), 1000);
+    } else if (seconds === 0 && active) {
       clearInterval(intervalRef.current);
       setActive(false);
-      completeSession();
+      setFocusActive(false);
+      handleComplete();
     }
-    return ()=> clearInterval(intervalRef.current);
+    return () => clearInterval(intervalRef.current);
   }, [active, seconds]);
 
+  // Tell FocusOverlay when a session is running
   useEffect(() => {
-  if (Notification.permission !== "granted") {
-    Notification.requestPermission();
-  }
-}, []);
-
-
-  useEffect(()=>{
-    function onVisibility(){
-      if(document.visibilityState === 'hidden' && active){
-        tabAlertSound.play();
-
-        if (Notification.permission === "granted") {
-    new Notification("Stay Focused", {
-      body: "You switched tabs. Let's get back to your session.",
-      icon: "/focus-icon.png"
-    });
-  }
-        if(affirmRef.current) affirmRef.current.messageForContext('tab-change');
-        setActive(false);
-      }
+    if (active) {
+      setFocusActive(true, isWork ? MODES[modeIdx].label : "Break");
+    } else {
+      setFocusActive(false);
     }
-    document.addEventListener('visibilitychange', onVisibility);
-    return ()=> document.removeEventListener('visibilitychange', onVisibility);
-  }, [active]);
+    return () => { if (active) setFocusActive(false); };
+  }, [active, isWork, modeIdx]);
 
-  useEffect(()=> {
-    if(mode === 'pomodoro'){ setWorkMins(25); setBreakMins(5); }
-    if(mode === 'deadline'){ setWorkMins(30); setBreakMins(5); }
-    // deep keeps whatever user sets
-  }, [mode]);
-
-  async function completeSession(){
-    if(affirmRef.current) affirmRef.current.messageForContext('task-complete');
-    alert("Session complete — Nicely done.");
-    try { await api.post("/sessions", { type: mode, durationMins: isWork ? workMins : breakMins }); } catch(e){ /* ignore */ }
+  async function handleComplete() {
+    if (isWork) {
+      setSessionCount((c) => c + 1);
+      showReward("🔥");
+      if (affirmRef.current) affirmRef.current.messageForContext("task-complete");
+      try {
+        await api.post("/sessions", {
+          type: MODES[modeIdx].id,
+          durationMins: workMins,
+        });
+      } catch {}
+    } else {
+      if (affirmRef.current) affirmRef.current.messageForContext("day-start");
+    }
   }
 
-  function toggle(){
-    setActive(a=>!a);
+  function showReward(emoji) {
+    setReward(emoji);
+    setTimeout(() => setReward(null), 900);
   }
-  function reset(){
+
+  function toggle() {
+    if (!active) {
+      setActive(true);
+    } else {
+      setActive(false);
+      setFocusActive(false);
+    }
+  }
+
+  function reset(w = workMins, b = breakMins) {
+    clearInterval(intervalRef.current);
     setActive(false);
-    setSeconds((isWork?workMins:breakMins)*60);
+    setFocusActive(false);
+    setIsWork(true);
+    setSeconds(w * 60);
   }
-  function fmt(s){ const m=Math.floor(s/60); const ss=s%60; return `${m}:${ss<10? '0'+ss: ss}`; }
 
+  function switchPhase() {
+    clearInterval(intervalRef.current);
+    setActive(false);
+    setFocusActive(false);
+    const next = !isWork;
+    setIsWork(next);
+    setSeconds((next ? workMins : breakMins) * 60);
+  }
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const ss = s % 60;
+    return `${m}:${ss < 10 ? "0" + ss : ss}`;
+  }
+
+  const sessionLabels = ["", "Starting out 🙂", "In the zone!", "Focus machine 🔥", "Incredible! 🤯"];
+  const sessionLabel =
+    sessionCount === 0
+      ? "Start your first session"
+      : sessionLabels[Math.min(sessionCount, sessionLabels.length - 1)];
 
   return (
-    <div className="app">
-      <div className="page-header">
-        <h2>Bouncy Brain</h2>
-        <div className="small">Soft pastel timer for calm sessions</div>
-      </div>
+    <div>
+      {reward && <div className="reward-burst">{reward}</div>}
 
-      <div className="main-grid">
+      <h1 className="page-title">Focus Timer</h1>
+      <p className="page-subtitle">Pomodoro-style sessions with tab-switch protection</p>
+
+      <div className="grid-main">
+        {/* ── Timer card ───────────────────────────────────── */}
         <div className="card">
-          <div className="mode-tabs" role="tablist">
-            {Object.keys(MODES).map(k=>(
-              <div key={k} onClick={()=>setMode(k)} className={`mode-tab ${mode===k? 'active':''}`}>{MODES[k].label}</div>
+          <div className="mode-tabs">
+            {MODES.map((m, i) => (
+              <button
+                key={m.id}
+                className={`mode-tab ${modeIdx === i ? "active" : ""}`}
+                onClick={() => { setModeIdx(i); }}
+              >
+                {m.label}
+              </button>
             ))}
           </div>
 
-          {mode === 'deep' && (
-            <div style={{display:'flex',gap:8,marginBottom:8}}>
-              <div style={{flex:1}}>
-                <label className="small">Work minutes</label>
-                <input className="input" type="number" value={workMins} onChange={e=>setWorkMins(Number(e.target.value))}/>
+          {modeIdx === 2 && (
+            <div className="flex gap-3 mb-4">
+              <div style={{ flex: 1 }}>
+                <div className="text-xs text-muted mb-1">Work (min)</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={workMins}
+                  onChange={(e) => {
+                    const v = Math.max(1, Number(e.target.value));
+                    setWorkMins(v);
+                    if (!active) setSeconds(isWork ? v * 60 : breakMins * 60);
+                  }}
+                  min={1} max={120}
+                />
               </div>
-              <div style={{width:120}}>
-                <label className="small">Break mins</label>
-                <input className="input" type="number" value={breakMins} onChange={e=>setBreakMins(Number(e.target.value))}/>
+              <div style={{ flex: 1 }}>
+                <div className="text-xs text-muted mb-1">Break (min)</div>
+                <input
+                  className="input"
+                  type="number"
+                  value={breakMins}
+                  onChange={(e) => {
+                    const v = Math.max(1, Number(e.target.value));
+                    setBreakMins(v);
+                    if (!active && !isWork) setSeconds(v * 60);
+                  }}
+                  min={1} max={60}
+                />
               </div>
             </div>
           )}
 
-          
+          {/* Ring Timer */}
+          <div className="ring-container">
+            <svg className="ring-svg" width="220" height="220" viewBox="0 0 220 220">
+              <circle className="ring-track" cx="110" cy="110" r="90" />
+              <circle
+                className={`ring-progress ${isWork ? "work" : "brk"}`}
+                cx="110" cy="110" r="90"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={dashOffset}
+              />
+            </svg>
+            <div className="ring-text">
+              <div className="ring-time">{fmt(seconds)}</div>
+              <div className="ring-label">{isWork ? "Work" : "Break"}</div>
+            </div>
+          </div>
 
-          <div className="timer-large card">{fmt(seconds)}</div>
-
-          <div style={{display:'flex',gap:10, marginTop:12}}>
-            <button className="btn" onClick={toggle}>{active? 'Pause': 'Start'}</button>
-            <button className="btn secondary" onClick={reset}>Reset</button>
-            <button className="btn secondary" onClick={()=>{ setIsWork(w=>!w); setSeconds((!isWork?workMins:breakMins)*60) }}>
-              Switch
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <button
+              className={`btn btn-lg ${active ? "btn-secondary" : "btn-primary"}`}
+              onClick={toggle}
+              style={{ minWidth: 130 }}
+            >
+              {active ? "⏸ Pause" : "▶ Start"}
+            </button>
+            <button className="btn btn-ghost" onClick={() => reset()}>
+              ↺ Reset
+            </button>
+            <button className="btn btn-ghost" onClick={switchPhase}>
+              {isWork ? "→ Break" : "→ Work"}
             </button>
           </div>
         </div>
 
-        <aside className="card">
-          <h4>Affirmation</h4>
-          <Affirmations ref={affirmRef} />
-        </aside>
+        {/* ── Right panel ──────────────────────────────────── */}
+        <div className="stack">
+          <div className="card">
+            <div className="card-title">Today's Sessions</div>
+            <div
+              className="stat-value stat-violet"
+              style={{ fontSize: 42, marginBottom: 4 }}
+            >
+              {sessionCount}
+            </div>
+            <div className="text-sm text-muted">{sessionLabel}</div>
+            {sessionCount >= 2 && (
+              <div className="streak-badge" style={{ marginTop: 10, alignSelf: "flex-start" }}>
+                🔥 {sessionCount} sessions
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <div className="card-title">Focus Guard</div>
+            <div
+              className="focus-status"
+              style={{
+                background: active ? "var(--green-dim)" : "var(--border)",
+                color: active ? "var(--green)" : "var(--muted)",
+                marginBottom: 10,
+              }}
+            >
+              <span className="focus-status-dot" />
+              {active ? "Active — guarding focus" : "Inactive"}
+            </div>
+            <div className="text-sm text-muted" style={{ lineHeight: 1.7 }}>
+              When you switch tabs during a session, you'll get a gentle nudge.
+              <br />
+              <span style={{ color: "var(--violet-light)" }}>800ms debounce</span> — quick reference
+              checks won't trigger it.
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-title">Affirmation</div>
+            <Affirmations ref={affirmRef} />
+          </div>
+        </div>
       </div>
     </div>
   );

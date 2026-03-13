@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { api } from "../api";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -9,34 +9,55 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
+    setError("");
     try {
       const path = isLogin ? "/auth/login" : "/auth/signup";
       const body = isLogin ? { email, password } : { email, password, name };
-
       const res = await api.post(path, body);
-
       setUser(res.user);
       setToken(res.token);
-
-      // 🔥 Redirect here
       navigate("/");
     } catch (err) {
-      alert(err.message || "Error");
+      setError(err.message || "Something went wrong");
     }
   }
 
   return (
-    <div className="auth-wrap">
-      <form className="auth-card card" onSubmit={submit}>
-        <h2>{isLogin ? "Login" : "Create account"}</h2>
+    <div className="auth-page">
+      <form className="card auth-card" onSubmit={submit}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 14,
+              background: "linear-gradient(135deg, var(--violet), #a855f7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: 18,
+              color: "#fff",
+              margin: "0 auto 12px",
+              boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
+            }}
+          >
+            BB
+          </div>
+          <div className="auth-title">Bouncy Brain</div>
+          <div className="auth-subtitle">
+            {isLogin ? "Welcome back" : "Create your account"}
+          </div>
+        </div>
 
         {!isLogin && (
           <input
-            className="input"
+            className="input mb-3"
             placeholder="Your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -45,7 +66,7 @@ export default function Auth() {
         )}
 
         <input
-          className="input"
+          className="input mb-3"
           placeholder="Email"
           type="email"
           value={email}
@@ -54,7 +75,7 @@ export default function Auth() {
         />
 
         <input
-          className="input"
+          className="input mb-3"
           placeholder="Password"
           type="password"
           value={password}
@@ -62,18 +83,29 @@ export default function Auth() {
           required
         />
 
-        <button className="btn" type="submit">
-          {isLogin ? "Login" : "Sign up"}
+        {error && (
+          <div
+            style={{
+              padding: "10px 14px",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--red-dim)",
+              color: "var(--red)",
+              fontSize: 13,
+              marginBottom: 12,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <button className="btn btn-primary w-full" type="submit">
+          {isLogin ? "Log in" : "Create account"}
         </button>
 
-        <div className="switch">
+        <div className="auth-switch">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <span
-            className="link-like"
-            style={{ marginLeft: 8 }}
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin ? "Create" : "Login"}
+          <span className="auth-link" onClick={() => { setIsLogin(!isLogin); setError(""); }}>
+            {isLogin ? "Sign up" : "Log in"}
           </span>
         </div>
       </form>

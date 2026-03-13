@@ -16,39 +16,56 @@ export default function DeadlineTimer(){
     setTasks(upcoming);
   }
 
+  function fmtDue(d) {
+    const dt = new Date(d);
+    const h = (dt - new Date()) / 3600000;
+    if (h < 0) return { label: "Overdue!", color: "var(--red)" };
+    if (h < 24) return { label: `Due in ~${Math.round(h)}h`, color: "var(--amber)" };
+    return { label: dt.toLocaleDateString(), color: "var(--muted)" };
+  }
+
   return (
-    <div className="app">
-      <div className="page-header"><h2>Deadlines</h2><div className="small">Upcoming due dates from your tasks</div></div>
+    <div>
+      <h1 className="page-title">Deadlines</h1>
+      <p className="page-subtitle">Upcoming due dates from your tasks</p>
 
-      <div className="main-grid">
-        <div className="card">
+      <div className="grid-main">
+        <div className="stack">
           {tasks.length === 0 ? (
-  <div className="small">No deadlines found</div>
-) : (
-  tasks.map(t => (
-    <div key={t._id} style={{ padding: "10px 0", borderBottom: "1px dashed #eee" }}>
-      <div style={{ fontWeight: 700 }}>{t.title}</div>
-      <div className="meta">{new Date(t.dueAt).toLocaleString()}</div>
-
-      <button
-        className="btn secondary"
-        style={{ marginTop: 8 }}
-        onClick={() => (window.location.href = `/calendar?task=${t._id}`)}
-      >
-        Change Deadline
-      </button>
-    </div>
-  ))
-)}
-
-
-  
-
+            <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--muted)" }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
+              No deadlines found. Add a due date to a task to see it here.
+            </div>
+          ) : (
+            tasks.map((t) => {
+              const due = fmtDue(t.dueAt);
+              return (
+                <div className="card" key={t._id}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold mb-1">{t.title}</div>
+                      <div className="text-sm" style={{ color: due.color }}>{due.label}</div>
+                    </div>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => navigate("/calendar")}
+                    >
+                      📅 Reschedule
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
-        <aside className="card">
-          <h4>Tip</h4>
-          <div className="small">Add tasks with due dates to see them here or on the Calendar page.</div>
+        <aside className="card" style={{ alignSelf: "flex-start" }}>
+          <div className="card-title">Tip</div>
+          <div className="text-sm text-muted" style={{ lineHeight: 1.7 }}>
+            Add due dates to tasks to see them here and on the Calendar.
+            <br /><br />
+            Tasks due within 24 hours show in amber. Overdue tasks show in red.
+          </div>
         </aside>
       </div>
     </div>

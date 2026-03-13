@@ -389,81 +389,80 @@ export default function Mindfulness(){
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="app">
-      <div className="page-header">
-        <h2>Mindfulness</h2>
-        <div className="small">Audio-guided practices to reset your attention.</div>
-      </div>
+  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-      <div className="main-grid">
+  return (
+    <div>
+      <h1 className="page-title">Mindfulness</h1>
+      <p className="page-subtitle">Audio-guided practices to reset your attention</p>
+
+      <div className="grid-main">
         <div className="card">
-          <label className="small">Mode</label>
-          <select 
-            className="select" 
-            value={mode} 
-            onChange={e=>setMode(e.target.value)} 
-            style={{marginTop:8}}
+          <div className="text-xs text-muted mb-1">Session type</div>
+          <select
+            className="select mb-4"
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
             disabled={running}
           >
-            {Object.keys(MODES).map(k => <option key={k} value={k}>{MODES[k].label}</option>)}
+            {Object.keys(MODES).map((k) => (
+              <option key={k} value={k}>{MODES[k].label}</option>
+            ))}
           </select>
 
           {audioError && (
-            <div style={{
-              marginTop: 12,
-              padding: '12px',
-              background: '#fee',
-              color: '#c33',
-              borderRadius: '6px',
-              fontSize: '0.85rem',
-              wordBreak: 'break-all'
-            }}>
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "var(--red-dim)",
+                color: "var(--red)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: 13,
+                marginBottom: 16,
+              }}
+            >
               ⚠️ {audioError}
             </div>
           )}
 
-          <div style={{
-            marginTop: 24,
-            padding: '3rem 1rem',
-            textAlign: 'center',
-            background: running ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f7f7f7',
-            borderRadius: '12px',
-            transition: 'all 0.3s ease',
-            color: running ? 'white' : '#666'
-          }}>
-            <div style={{fontSize: '1.2rem', marginBottom: '0.5rem', opacity: 0.9}}>
-              {running ? 'Session in progress' : 'Ready to begin'}
+          <div className={`audio-player ${running ? "playing" : ""}`}>
+            <div className="audio-state-label">
+              {running ? "Session in progress" : "Ready to begin"}
             </div>
-            <div style={{fontSize: '3rem', fontWeight: 'bold'}}>
-              {formatTime(currentTime)}
-            </div>
+            <div className="audio-time">{formatTime(currentTime)}</div>
             {duration > 0 && (
-              <div style={{fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.8}}>
-                of {formatTime(duration)}
-              </div>
+              <div className="audio-duration">of {formatTime(duration)}</div>
             )}
+            <div className="audio-progress">
+              <div className="audio-progress-fill" style={{ width: `${progressPct}%` }} />
+            </div>
           </div>
 
-          <audio 
-            ref={audioRef} 
-            src={MODES[mode].audioSrc}
-            preload="metadata"
-          />
+          <audio ref={audioRef} src={MODES[mode].audioSrc} preload="metadata" />
 
-          <div style={{marginTop:16}}>
-            <button className="btn" onClick={()=>setRunning(true)} disabled={running || audioError}>
-              Start
+          <div className="flex gap-2 mt-4">
+            <button
+              className="btn btn-primary"
+              onClick={() => setRunning(true)}
+              disabled={running || !!audioError}
+            >
+              ▶ Start
             </button>
-            <button className="btn secondary" onClick={()=>setRunning(false)} style={{marginLeft:8}} disabled={!running}>
-              Stop
+            <button
+              className="btn btn-ghost"
+              onClick={() => setRunning(false)}
+              disabled={!running}
+            >
+              ⏹ Stop
             </button>
           </div>
         </div>
 
-        <aside className="card">
-          <h4>Affirmation</h4>
-          <Affirmations ref={affirmRef} />
+        <aside className="stack">
+          <div className="card">
+            <div className="card-title">Affirmation</div>
+            <Affirmations ref={affirmRef} />
+          </div>
         </aside>
       </div>
     </div>

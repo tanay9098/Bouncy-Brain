@@ -39,11 +39,9 @@ function handleEventClick(info) {
 
 
   return (
-    <div className="app">
-      <div className="page-header">
-        <h2>Calendar</h2>
-        <p className="small">Your tasks in calendar view</p>
-      </div>
+    <div>
+      <h1 className="page-title">Calendar</h1>
+      <p className="page-subtitle">Your tasks in calendar view</p>
 
       <div className="card">
         <FullCalendar
@@ -61,3 +59,4 @@ function handleEventClick(info) {
     </div>
   );
 }
+
