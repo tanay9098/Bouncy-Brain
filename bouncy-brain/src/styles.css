@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ═══════════════════════════════════════════════════════
    BOUNCY BRAIN — ADHD DESIGN SYSTEM v2
    Token-driven theming: one CSS var change cascades everywhere
