@@ -1,0 +1,15 @@
+# Railway config for the API service.
+# Set Root Directory = backend in the Railway dashboard.
+#
+# For the worker service, create a second Railway service from this same repo:
+#   Root Directory  = backend
+#   Dockerfile path = Dockerfile.worker
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
