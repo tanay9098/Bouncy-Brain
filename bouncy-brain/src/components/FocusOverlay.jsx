@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { tabAlertSound } from "../utils/sound";
+
 // ── 3-State Focus FSM ────────────────────────────────────────────────────
 // idle      → no session running
 // focused   → session active, tab visible
@@ -59,6 +61,8 @@ export default function FocusOverlay() {
             // Only escalate if still distracted (not already dismissed)
             if (stateRef.current === STATES.DISTRACTED) {
               setState(STATES.ALERT);
+                tabAlertSound.play();
+
             }
           }, 800);
         }
