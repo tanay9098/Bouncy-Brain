@@ -8,7 +8,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 90; // r = 90
 const MODES = [
   { id: "pomodoro", label: "Pomodoro", work: 25, brk: 5 },
   { id: "deep",     label: "Deep Work", work: 50, brk: 10 },
-  { id: "custom",   label: "Custom",    work: 30, brk: 5 },
+  
 ];
 
 export default function FocusTimer() {
