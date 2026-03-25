@@ -31,13 +31,13 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .catch(err => console.error('MongoDB connection error', err));
 
 // API routes
-app.use('/auth', authRoutes);
-app.use('/tasks', taskRoutes);
-app.use('/sessions', sessionRoutes);
-app.use('/push', pushRoutes);
-app.use('/stats', statsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/push', pushRoutes);
+app.use('/api/stats', statsRoutes);
 
-app.use("/priority", priorityRoutes);
+app.use("/api/priority", priorityRoutes);
 
 
 // health

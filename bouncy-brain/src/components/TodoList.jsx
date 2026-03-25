@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import api from "../services/api";
 import { notify } from "../utils/notify";
 import { scheduleDeadline, clearDeadline } from "../utils/deadlineScheduler";
 import { useEnergy } from "../contexts/EnergyContext";
