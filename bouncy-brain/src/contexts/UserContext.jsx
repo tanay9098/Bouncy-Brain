@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { setToken as setApiToken } from "../api";
+import api from "../services/api";
 
 const ctx = createContext();
 export const useUser = () => useContext(ctx);
@@ -11,16 +11,19 @@ export function UserProvider({ children }) {
 
   // Load token and user from localStorage on app start
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = localStorage.getItem("accessToken");
     const storedUser = localStorage.getItem("user");
 
     if (storedToken) {
       setToken(storedToken);
-      setApiToken(storedToken);
     }
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (storedUser && storedUser !== "undefined") {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
 
     setLoading(false);
@@ -29,14 +32,17 @@ export function UserProvider({ children }) {
   // Save token whenever it changes
   function saveToken(t) {
     setToken(t);
-    setApiToken(t);
-    localStorage.setItem("token", t);
+    localStorage.setItem("accessToken", t);
   }
 
   // Save user whenever it changes
   function saveUser(u) {
     setUser(u);
-    localStorage.setItem("user", JSON.stringify(u));
+    if (u) {
+      localStorage.setItem("user", JSON.stringify(u));
+    } else {
+      localStorage.removeItem("user");
+    }
   }
 
   return (

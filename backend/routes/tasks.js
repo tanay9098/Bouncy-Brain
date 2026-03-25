@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Task = require('../models/Task');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
+const { chunkTask } = require('../src/services/aiService');
+
+
 // ✅ Local ML
-const { predictPriority } = require('../src/ml/priorityModel');
+const { predictPriority } = require('../ml/priorityModel');
 
 // ─── AUTH MIDDLEWARE ────────────────────────────────────────────────
 function auth(req, res, next) {
@@ -22,6 +26,10 @@ function auth(req, res, next) {
   }
 }
 
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
 // ─── LIST TASKS ─────────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
   const tasks = await Task.find({ userId: req.userId }).sort({ dueAt: 1 });
@@ -30,6 +38,10 @@ router.get('/', auth, async (req, res) => {
 
 // ─── GET TASK ───────────────────────────────────────────────────────
 router.get('/:id', auth, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid task id' });
+  }
+
   const t = await Task.findById(req.params.id);
   res.json({ task: t });
 });
@@ -51,6 +63,10 @@ router.post('/', auth, async (req, res) => {
 
 // ─── UPDATE TASK ────────────────────────────────────────────────────
 router.put('/:id', auth, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid task id' });
+  }
+
   const { title, dueAt, estimateMins, dreadScore } = req.body;
 
   const update = {};
@@ -72,6 +88,10 @@ router.put('/:id', auth, async (req, res) => {
 
 // ─── COMPLETE TASK ──────────────────────────────────────────────────
 router.put('/:id/complete', auth, async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid task id' });
+  }
+
   await Task.findByIdAndUpdate(req.params.id, {
     completed: true,
     completedAt: new Date(),
@@ -81,41 +101,66 @@ router.put('/:id/complete', auth, async (req, res) => {
 });
 
 // ─── AUTO CHUNK TASK ────────────────────────────────────────────────
+// router.post('/:id/auto-chunk', auth, async (req, res) => {
+//   const task = await Task.findById(req.params.id);
+//   if (!task) return res.status(404).json({ error: 'not found' });
+
+//   // Optional ML chunk API
+//   if (process.env.ML_CHUNK_URL) {
+//     try {
+//       const r = await axios.post(process.env.ML_CHUNK_URL, {
+//         text: task.title,
+//         estimateMins: task.estimateMins,
+//       });
+
+//       const subs = r.data.subtasks || r.data.chunks || [];
+//       task.subtasks = subs.map((s) => ({ title: s.title || s }));
+//       await task.save();
+
+//       return res.json({ task });
+//     } catch (e) {
+//       console.warn('ml chunk failed', e.message);
+//     }
+//   }
+
+//   // Fallback chunking
+//   const chunks = [
+//     { title: task.title + ' — part 1', completed: false },
+//     { title: task.title + ' — part 2', completed: false },
+//     { title: task.title + ' — part 3', completed: false },
+//   ];
+
+//   task.subtasks = chunks;
+//   await task.save();
+
+//   res.json({ task });
+// });
+
 router.post('/:id/auto-chunk', auth, async (req, res) => {
-  const task = await Task.findById(req.params.id);
-  if (!task) return res.status(404).json({ error: 'not found' });
-
-  // Optional ML chunk API
-  if (process.env.ML_CHUNK_URL) {
-    try {
-      const r = await axios.post(process.env.ML_CHUNK_URL, {
-        text: task.title,
-        estimateMins: task.estimateMins,
-      });
-
-      const subs = r.data.subtasks || r.data.chunks || [];
-      task.subtasks = subs.map((s) => ({ title: s.title || s }));
-      await task.save();
-
-      return res.json({ task });
-    } catch (e) {
-      console.warn('ml chunk failed', e.message);
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid task id' });
     }
+
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ error: 'not found' });
+
+    const steps = await chunkTask(task.title);
+
+    task.subtasks = steps.map(s => ({
+      title: s,
+      completed: false,
+    }));
+
+    await task.save();
+
+    res.json({ task });
+
+  } catch (err) {
+    console.error("AI CHUNK ERROR:", err);
+    res.status(500).json({ error: "AI failed" });
   }
-
-  // Fallback chunking
-  const chunks = [
-    { title: task.title + ' — part 1', completed: false },
-    { title: task.title + ' — part 2', completed: false },
-    { title: task.title + ' — part 3', completed: false },
-  ];
-
-  task.subtasks = chunks;
-  await task.save();
-
-  res.json({ task });
 });
-
 // ─── AI SUGGESTIONS (UPDATED WITH LOCAL ML) ─────────────────────────
 router.get('/ai/suggestions', auth, async (req, res) => {
   try {
@@ -209,6 +254,35 @@ router.get('/ai/suggestions', auth, async (req, res) => {
   }
 });
 
+ router.post('/brain-dump', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text) return res.status(400).json({ error: 'No text provided' });
+
+    // Simple fallback (no AI yet)
+    const lines = text.split(/,|\n/).map(t => t.trim()).filter(Boolean);
+
+    const tasks = [];
+
+    for (let l of lines) {
+      const task = await Task.create({
+        userId: req.userId,
+        title: l,
+        estimateMins: 30,
+        dreadScore: 3,
+      });
+      tasks.push(task);
+    }
+
+    res.json({ tasks });
+
+  } catch (err) {
+    console.error("BRAIN DUMP ERROR:", err);
+    res.status(500).json({ error: "Failed to process brain dump" });
+  }
+});
+
 // ─── WHAT NEXT ──────────────────────────────────────────────────────
 router.get('/what-next', auth, async (req, res) => {
   const energyLevel = Math.max(1, Math.min(5, parseInt(req.query.energyLevel || '3', 10)));
@@ -241,5 +315,6 @@ router.get('/what-next', auth, async (req, res) => {
 
   res.json({ task: ranked[0].task });
 });
+
 
 module.exports = router;

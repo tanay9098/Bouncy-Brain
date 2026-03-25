@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../api";
+import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 
@@ -17,13 +17,20 @@ export default function Auth() {
     setError("");
     try {
       const path = isLogin ? "/auth/login" : "/auth/signup";
-      const body = isLogin ? { email, password } : { email, password, name };
-      const res = await api.post(path, body);
-      setUser(res.user);
-      setToken(res.token);
+      const body = isLogin
+        ? { email: email.trim(), password }
+        : { email: email.trim(), password, name: name.trim() };
+      const { data } = await api.post(path, body);
+      setUser(data.user);
+      setToken(data.token);
       navigate("/");
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      setError(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
+          "Something went wrong"
+      );
     }
   }
 
