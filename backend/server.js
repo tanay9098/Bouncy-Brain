@@ -19,10 +19,10 @@ const priorityRoutes = require("./routes/priority");
 const app = express();
 app.use(bodyParser.json());
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from your frontend origin
-  credentials: true, // Allow sending and receiving cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  origin: true, // Allow all origins (web + mobile)
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // connect mongodb
