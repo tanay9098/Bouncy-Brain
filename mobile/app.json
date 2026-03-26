@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Bouncy Brain",
+    "slug": "bouncy-brain",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f0f13"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bouncybrain.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f0f13"
+      },
+      "package": "com.bouncybrain.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "http://localhost:4000/api"
+    }
+  }
+}
