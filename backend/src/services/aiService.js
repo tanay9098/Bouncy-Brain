@@ -7,7 +7,9 @@ function getClient() {
 
 function safeJsonParse(content, fallback) {
   try {
-    return JSON.parse(content);
+    // Strip markdown code fences if present
+    const stripped = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    return JSON.parse(stripped);
   } catch {
     return fallback;
   }
