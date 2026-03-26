@@ -26,10 +26,10 @@ export default function Home() {
 
   async function loadStats() {
     try {
-      const d = await api.get("/stats/daily");
+      const { data: d } = await api.get("/stats/daily");
       setDaily(d);
       // Derive a streak from weekly data
-      const w = await api.get("/stats/weekly");
+      const { data: w } = await api.get("/stats/weekly");
       if (w?.tasks) {
         const byDay = {};
         w.tasks.forEach((t) => {

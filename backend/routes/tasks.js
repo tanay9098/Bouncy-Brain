@@ -7,6 +7,9 @@ const jwt = require('jsonwebtoken');
 const { chunkTask, parseBrainDump } = require('../src/services/aiService');
 
 
+const { chunkTask } = require('../src/services/aiService');
+
+
 // ✅ Local ML
 const { predictPriority } = require('../ml/priorityModel');
 
