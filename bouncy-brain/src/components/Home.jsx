@@ -26,10 +26,10 @@ export default function Home() {
 
   async function loadStats() {
     try {
-      const { data: d } = await api.get("/stats/daily");
+      const d = await api.get("/stats/daily");
       setDaily(d);
       // Derive a streak from weekly data
-      const { data: w } = await api.get("/stats/weekly");
+      const w = await api.get("/stats/weekly");
       if (w?.tasks) {
         const byDay = {};
         w.tasks.forEach((t) => {
@@ -52,7 +52,7 @@ export default function Home() {
   async function loadWhatNext() {
     setLoadingNext(true);
     try {
-      const { data } = await api.get(`/tasks/what-next?energyLevel=${energy}`);
+      const data = await api.get(`/tasks/what-next?energyLevel=${energy}`);
       setWhatNext(data.task || null);
     } catch {
       setWhatNext(null);

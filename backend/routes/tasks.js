@@ -3,9 +3,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Task = require('../models/Task');
 const jwt = require('jsonwebtoken');
-const axios = require('axios');
 
-const { chunkTask } = require('../src/services/aiService');
+const { chunkTask, parseBrainDump } = require('../src/services/aiService');
 
 
 // ✅ Local ML
@@ -34,6 +33,163 @@ function isValidObjectId(id) {
 router.get('/', auth, async (req, res) => {
   const tasks = await Task.find({ userId: req.userId }).sort({ dueAt: 1 });
   res.json({ tasks });
+});
+
+// ─── WHAT NEXT ──────────────────────────────────────────────────────
+router.get('/what-next', auth, async (req, res) => {
+  const tasks = await Task.find({
+    userId: req.userId,
+    completed: false,
+  });
+
+  if (!tasks.length) return res.json({ task: null });
+
+  const ranked = tasks.map((t) => {
+    const payload = {
+      completion_rate: 0.5,
+      deadline_days: t.dueAt
+        ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24)
+        : 30,
+      estimated_time: t.estimateMins || 30,
+      urgency_self: t.importance || 1,
+      historical_procrastination_rate: 0.4,
+    };
+
+    return {
+      task: t,
+      score: predictPriority(payload).score,
+    };
+  });
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  res.json({ task: ranked[0].task });
+});
+
+// ─── AI SUGGESTIONS ─────────────────────────────────────────────────
+router.get('/ai/suggestions', auth, async (req, res) => {
+  try {
+    const tasks = await Task.find({
+      userId: req.userId,
+      completed: false,
+    }).sort({ dueAt: 1 });
+
+    if (tasks.length === 0) {
+      return res.json({ suggestions: [] });
+    }
+
+    const completedTasks = await Task.find({
+      userId: req.userId,
+      completed: true,
+    }).limit(50);
+
+    const completionRate =
+      completedTasks.length > 0
+        ? completedTasks.length / (completedTasks.length + tasks.length)
+        : 0.5;
+
+    const lateCount = completedTasks.filter((ct) => {
+      if (!ct.completedAt || !ct.dueAt) return false;
+      return new Date(ct.completedAt) > new Date(ct.dueAt);
+    }).length;
+
+    const procrastinationRate =
+      completedTasks.length > 0
+        ? lateCount / completedTasks.length
+        : 0.4;
+
+    const suggestions = [];
+
+    const ranked = tasks.map((t) => {
+      const deadlineDays = t.dueAt
+        ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24)
+        : 30;
+
+      const payload = {
+        completion_rate: completionRate,
+        deadline_days: Math.max(deadlineDays, 0),
+        estimated_time: t.estimateMins || 30,
+        urgency_self: t.importance || 1,
+        historical_procrastination_rate: procrastinationRate,
+      };
+
+      const result = predictPriority(payload);
+
+      return {
+        taskId: t._id,
+        title: t.title,
+        priority: result.priority,
+        score: result.score,
+      };
+    });
+
+    ranked.sort((a, b) => b.score - a.score);
+
+    if (ranked.length > 0) {
+      suggestions.push({
+        id: 'priority_' + Date.now(),
+        type: 'priority',
+        title: `🎯 Start with "${ranked[0].title}"`,
+        description:
+          'This task fits your current situation and should be your top priority.',
+        taskId: ranked[0].taskId,
+        action: 'prioritize',
+      });
+    }
+
+    const quickTask = tasks.find((t) => (t.estimateMins || 30) <= 15);
+    if (quickTask) {
+      suggestions.push({
+        id: 'quick_' + Date.now(),
+        type: 'quick-win',
+        title: `⚡ Quick win: "${quickTask.title}"`,
+        description: 'Finish this quickly to build momentum.',
+        taskId: quickTask._id,
+        action: 'complete',
+      });
+    }
+
+    res.json({ suggestions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to generate suggestions' });
+  }
+});
+
+// ─── BRAIN DUMP ──────────────────────────────────────────────────────
+router.post('/brain-dump', auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text) return res.status(400).json({ error: 'No text provided' });
+
+    const suggestions = await parseBrainDump(text);
+
+    if (!suggestions.length) {
+      return res.status(422).json({ error: 'No actionable tasks found' });
+    }
+
+    const tasks = [];
+
+    for (const item of suggestions) {
+      const task = await Task.create({
+        userId: req.userId,
+        title: item.title,
+        dueAt: item.dueAt ? new Date(item.dueAt) : null,
+        estimateMins: item.estimateMins ?? 30,
+        dreadScore: item.dreadScore ?? 3,
+        importance: item.importance ?? 3,
+      });
+
+      tasks.push(task);
+    }
+
+    res.json({ tasks, source: process.env.OPENAI_API_KEY ? 'openai' : 'fallback' });
+
+  } catch (err) {
+    console.error("BRAIN DUMP ERROR:", err);
+    res.status(500).json({ error: "Failed to process brain dump" });
+  }
 });
 
 // ─── GET TASK ───────────────────────────────────────────────────────
@@ -252,68 +408,6 @@ router.get('/ai/suggestions', auth, async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Failed to generate suggestions' });
   }
-});
-
- router.post('/brain-dump', auth, async (req, res) => {
-  try {
-    const { text } = req.body;
-
-    if (!text) return res.status(400).json({ error: 'No text provided' });
-
-    // Simple fallback (no AI yet)
-    const lines = text.split(/,|\n/).map(t => t.trim()).filter(Boolean);
-
-    const tasks = [];
-
-    for (let l of lines) {
-      const task = await Task.create({
-        userId: req.userId,
-        title: l,
-        estimateMins: 30,
-        dreadScore: 3,
-      });
-      tasks.push(task);
-    }
-
-    res.json({ tasks });
-
-  } catch (err) {
-    console.error("BRAIN DUMP ERROR:", err);
-    res.status(500).json({ error: "Failed to process brain dump" });
-  }
-});
-
-// ─── WHAT NEXT ──────────────────────────────────────────────────────
-router.get('/what-next', auth, async (req, res) => {
-  const energyLevel = Math.max(1, Math.min(5, parseInt(req.query.energyLevel || '3', 10)));
-
-  const tasks = await Task.find({
-    userId: req.userId,
-    completed: false,
-  });
-
-  if (!tasks.length) return res.json({ task: null });
-
-  const ranked = tasks.map((t) => {
-    const payload = {
-      completion_rate: 0.5,
-      deadline_days: t.dueAt
-        ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24)
-        : 30,
-      estimated_time: t.estimateMins || 30,
-      urgency_self: t.importance || 1,
-      historical_procrastination_rate: 0.4,
-    };
-
-    return {
-      task: t,
-      score: predictPriority(payload).score,
-    };
-  });
-
-  ranked.sort((a, b) => b.score - a.score);
-
-  res.json({ task: ranked[0].task });
 });
 
 

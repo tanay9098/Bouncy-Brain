@@ -20,7 +20,7 @@ export default function Auth() {
       const body = isLogin
         ? { email: email.trim(), password }
         : { email: email.trim(), password, name: name.trim() };
-      const { data } = await api.post(path, body);
+      const data = await api.post(path, body);
       setUser(data.user);
       setToken(data.token);
       navigate("/");
