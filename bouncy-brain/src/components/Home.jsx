@@ -27,7 +27,7 @@ export default function Home() {
   async function loadStats() {
     try {
       const { data: d } = await api.get("/stats/daily");
-      setDaily(d);
+      setDaily(d ?? { tasksCompleted: 0, totalSessionMins: 0 });
       // Derive a streak from weekly data
       const { data: w } = await api.get("/stats/weekly");
       if (w?.tasks) {

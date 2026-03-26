@@ -188,19 +188,15 @@ export default function TodoList() {
   }
 
   // ── AI suggestion actions ─────────────────────────────────────────────
-  async function acceptSuggestion(s) {
-    try {
-      await api.post(`/tasks/ai/suggestions/${s.id}/accept`, {
-        type: s.type, taskId: s.taskId, data: s.data,
-      });
-      setSuggestions((p) => p.filter((x) => x.id !== s.id));
-      setDismissedIds((p) => new Set([...p, s.id]));
-      load();
-    } catch {}
+  function acceptSuggestion(s) {
+    if (s.type === "quick-win" && s.taskId) {
+      complete(s.taskId);
+    }
+    setSuggestions((p) => p.filter((x) => x.id !== s.id));
+    setDismissedIds((p) => new Set([...p, s.id]));
   }
 
   function dismissSuggestion(s) {
-    api.post(`/tasks/ai/suggestions/${s.id}/reject`, {}).catch(() => {});
     setSuggestions((p) => p.filter((x) => x.id !== s.id));
     setDismissedIds((p) => new Set([...p, s.id]));
   }
