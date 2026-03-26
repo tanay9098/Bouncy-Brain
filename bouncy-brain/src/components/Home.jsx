@@ -52,7 +52,7 @@ export default function Home() {
   async function loadWhatNext() {
     setLoadingNext(true);
     try {
-      const { data } = await api.get(`/tasks/what-next?energyLevel=${energy}`);
+      const data = await api.get(`/tasks/what-next?energyLevel=${energy}`);
       setWhatNext(data.task || null);
     } catch {
       setWhatNext(null);

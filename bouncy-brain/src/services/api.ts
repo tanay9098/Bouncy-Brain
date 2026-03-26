@@ -12,7 +12,7 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => res.data,
   async (err) => {
     if (err.response?.status === 401) {
       try {
@@ -26,7 +26,7 @@ api.interceptors.response.use(
         return api.request(err.config)
       } catch {
         localStorage.removeItem('accessToken')
-        window.location.href = '/login'
+        window.location.href = '/auth'
       }
     }
     return Promise.reject(err)
