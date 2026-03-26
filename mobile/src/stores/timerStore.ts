@@ -7,9 +7,11 @@ interface TimerState {
   secondsLeft: number;
   isRunning: boolean;
   sessionCount: number;
-  workDuration: number;   // minutes
-  breakDuration: number;  // minutes
+  workDuration: number;
+  breakDuration: number;
   subject: string;
+  focusModeActive: boolean;
+  distractedCount: number;
   actions: {
     start: () => void;
     pause: () => void;
@@ -19,6 +21,9 @@ interface TimerState {
     setSubject: (s: string) => void;
     setWorkDuration: (m: number) => void;
     setBreakDuration: (m: number) => void;
+    enableFocusMode: () => void;
+    disableFocusMode: () => void;
+    incrementDistracted: () => void;
   };
 }
 
@@ -30,6 +35,8 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   workDuration: 25,
   breakDuration: 5,
   subject: '',
+  focusModeActive: false,
+  distractedCount: 0,
 
   actions: {
     start: () => set({ isRunning: true }),
@@ -77,5 +84,9 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         breakDuration: m,
         secondsLeft: s.phase === 'break' && !s.isRunning ? m * 60 : s.secondsLeft,
       })),
+    enableFocusMode: () => set({ focusModeActive: true, distractedCount: 0 }),
+    disableFocusMode: () => set({ focusModeActive: false }),
+    incrementDistracted: () =>
+      set((s) => ({ distractedCount: s.distractedCount + 1 })),
   },
 }));

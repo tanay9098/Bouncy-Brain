@@ -5,6 +5,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
+import * as Notifications from 'expo-notifications';
+
+// Tap on any focus-guard notification → brings app to foreground automatically
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 import { UserProvider } from './src/contexts/UserContext';
 import { EnergyProvider } from './src/contexts/EnergyContext';
