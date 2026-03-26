@@ -41,7 +41,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await authApi.login(email, password);
-    await SecureStore.setItemAsync('accessToken', data.accessToken);
+    await SecureStore.setItemAsync('accessToken', data.token || data.accessToken);
     if (data.refreshToken) {
       await SecureStore.setItemAsync('refreshToken', data.refreshToken);
     }
@@ -56,7 +56,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await authApi.signup(name, email, password);
-    await SecureStore.setItemAsync('accessToken', data.accessToken);
+    await SecureStore.setItemAsync('accessToken', data.token || data.accessToken);
     if (data.refreshToken) {
       await SecureStore.setItemAsync('refreshToken', data.refreshToken);
     }
