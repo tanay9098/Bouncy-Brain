@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { notify } from "../utils/notify";
 import { scheduleDeadline, clearDeadline } from "../utils/deadlineScheduler";
@@ -46,6 +47,7 @@ const SUGGESTION_LABELS = {
 
 export default function TodoList() {
   const { energy } = useEnergy();
+  const [searchParams] = useSearchParams();
 
   // Tasks
   const [tasks, setTasks] = useState([]);
@@ -68,7 +70,7 @@ export default function TodoList() {
   // Brain dump
   const [dumpText, setDumpText] = useState("");
   const [dumpLoading, setDumpLoading] = useState(false);
-  const [view, setView] = useState("tasks"); // "tasks" | "dump"
+  const [view, setView] = useState(searchParams.get("tab") === "dump" ? "dump" : "tasks"); // "tasks" | "dump"
 
   // AI suggestions
   const [suggestions, setSuggestions] = useState([]);

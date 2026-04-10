@@ -164,7 +164,7 @@ export default function Home() {
                   🎯 Start Focus Session
                 </button>
               </Link>
-              <Link to="/todo" style={{ textDecoration: "none" }}>
+              <Link to="/todo?tab=dump" style={{ textDecoration: "none" }}>
                 <button className="btn btn-secondary w-full">
                   📝 Brain Dump → Tasks
                 </button>
