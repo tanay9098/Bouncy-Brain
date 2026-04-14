@@ -23,7 +23,7 @@ interface Task {
   aiPriority?: string;
 }
 
-type Props = { onBack: () => void };
+type Props = { onBack?: () => void };
 
 function getDaysUntil(dueAt: string): number {
   const now = new Date();
@@ -91,9 +91,11 @@ export default function DeadlinesScreen({ onBack }: Props) {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
+        {onBack ? (
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          </TouchableOpacity>
+        ) : null}
         <Text style={styles.title}>Deadlines</Text>
       </View>
 
