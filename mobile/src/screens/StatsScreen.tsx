@@ -19,7 +19,13 @@ import { colors, spacing, radius, typography } from '../theme/colors';
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_W = SCREEN_W - spacing.md * 2 - 2; // full width minus padding
 
-type Tab = 'weekly' | 'monthly';
+type Tab = 'daily' | 'weekly' | 'monthly';
+
+interface DailyData {
+  tasksCompleted?: number;
+  focusMinutes?: number;
+  streak?: number;
+}
 
 interface WeeklyData {
   tasksPerDay?: number[];
@@ -58,7 +64,13 @@ const focusChartConfig = {
 };
 
 export default function StatsScreen() {
-  const [tab, setTab] = useState<Tab>('weekly');
+  const [tab, setTab] = useState<Tab>('daily');
+
+  const { data: daily, isLoading: loadingDaily } = useQuery<DailyData>({
+    queryKey: ['stats', 'daily'],
+    queryFn: () => statsApi.daily().then((r) => r.data),
+    enabled: tab === 'daily',
+  });
 
   const { data: weekly, isLoading: loadingWeekly } = useQuery<WeeklyData>({
     queryKey: ['stats', 'weekly'],
@@ -72,7 +84,7 @@ export default function StatsScreen() {
     enabled: tab === 'monthly',
   });
 
-  const isLoading = tab === 'weekly' ? loadingWeekly : loadingMonthly;
+  const isLoading = tab === 'daily' ? loadingDaily : tab === 'weekly' ? loadingWeekly : loadingMonthly;
   const d = tab === 'weekly' ? weekly : monthly;
 
   const taskLabels = d?.labels ?? (tab === 'weekly'
@@ -88,14 +100,14 @@ export default function StatsScreen() {
 
         {/* Tabs */}
         <View style={styles.tabRow}>
-          {(['weekly', 'monthly'] as Tab[]).map((t) => (
+          {(['daily', 'weekly', 'monthly'] as Tab[]).map((t) => (
             <TouchableOpacity
               key={t}
               style={[styles.tabBtn, tab === t && styles.tabActive]}
               onPress={() => setTab(t)}
             >
               <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                {t === 'weekly' ? 'This Week' : 'This Month'}
+                {t === 'daily' ? 'Today' : t === 'weekly' ? 'This Week' : 'This Month'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -105,6 +117,39 @@ export default function StatsScreen() {
           <View style={styles.center}>
             <ActivityIndicator color={colors.violetLight} size="large" />
           </View>
+        ) : tab === 'daily' ? (
+          <>
+            {/* Daily Summary cards */}
+            <View style={styles.summaryRow}>
+              <SummaryCard
+                icon="checkmark-circle"
+                color={colors.green}
+                value={daily?.tasksCompleted ?? 0}
+                label="Tasks Done"
+              />
+              <SummaryCard
+                icon="timer"
+                color={colors.violet}
+                value={daily?.focusMinutes ?? 0}
+                label="Focus Mins"
+              />
+              <SummaryCard
+                icon="flame"
+                color={colors.amber}
+                value={daily?.streak ?? 0}
+                label="Day Streak"
+              />
+            </View>
+
+            {/* Daily Motivational Message */}
+            <View style={styles.motiveBanner}>
+              <Text style={styles.motiveText}>
+                {(daily?.tasksCompleted ?? 0) > 0
+                  ? `🎉 You've completed ${daily?.tasksCompleted} task${(daily?.tasksCompleted ?? 0) > 1 ? 's' : ''} today! Keep the momentum going!`
+                  : `💪 No tasks done yet today — let's change that! Start small.`}
+              </Text>
+            </View>
+          </>
         ) : (
           <>
             {/* Summary cards */}

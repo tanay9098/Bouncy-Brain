@@ -11,10 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { colors, spacing, radius, typography } from '../theme/colors';
 import CalendarScreen from './CalendarScreen';
-import DeadlinesScreen from './DeadlinesScreen';
 import MindfulnessScreen from './MindfulnessScreen';
 
-type SubScreen = 'menu' | 'calendar' | 'deadlines' | 'mindfulness';
+type SubScreen = 'menu' | 'calendar' | 'mindfulness';
 
 const MENU_ITEMS = [
   {
@@ -23,13 +22,6 @@ const MENU_ITEMS = [
     label: 'Calendar',
     description: 'View tasks on a calendar',
     color: colors.blue,
-  },
-  {
-    key: 'deadlines' as SubScreen,
-    icon: 'alarm',
-    label: 'Deadlines',
-    description: 'Track upcoming due dates',
-    color: colors.red,
   },
   {
     key: 'mindfulness' as SubScreen,
@@ -45,9 +37,6 @@ export default function MoreScreen() {
 
   if (active === 'calendar') {
     return <CalendarScreen onBack={() => setActive('menu')} />;
-  }
-  if (active === 'deadlines') {
-    return <DeadlinesScreen onBack={() => setActive('menu')} />;
   }
   if (active === 'mindfulness') {
     return <MindfulnessScreen onBack={() => setActive('menu')} />;

@@ -13,6 +13,7 @@ import SignupScreen from '../screens/auth/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
 import TasksScreen from '../screens/TasksScreen';
 import FocusScreen from '../screens/FocusScreen';
+import DeadlinesScreen from '../screens/DeadlinesScreen';
 import StatsScreen from '../screens/StatsScreen';
 import MoreScreen from '../screens/MoreScreen';
 
@@ -25,6 +26,7 @@ export type MainTabParams = {
   Home: undefined;
   Tasks: undefined;
   Focus: undefined;
+  Deadlines: undefined;
   Stats: undefined;
   More: undefined;
 };
@@ -67,6 +69,7 @@ function MainNavigator() {
             Home: ['home', 'home-outline'],
             Tasks: ['checkmark-circle', 'checkmark-circle-outline'],
             Focus: ['timer', 'timer-outline'],
+            Deadlines: ['alarm', 'alarm-outline'],
             Stats: ['bar-chart', 'bar-chart-outline'],
             More: ['grid', 'grid-outline'],
           };
@@ -84,6 +87,7 @@ function MainNavigator() {
       <MainTab.Screen name="Home" component={HomeScreen} />
       <MainTab.Screen name="Tasks" component={TasksScreen} />
       <MainTab.Screen name="Focus" component={FocusScreen} />
+      <MainTab.Screen name="Deadlines" component={DeadlinesScreen} />
       <MainTab.Screen name="Stats" component={StatsScreen} />
       <MainTab.Screen name="More" component={MoreScreen} />
     </MainTab.Navigator>

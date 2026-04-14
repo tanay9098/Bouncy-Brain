@@ -222,8 +222,9 @@ export default function TasksScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Tasks</Text>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setShowBrainDump(true)}>
-            <Ionicons name="create-outline" size={20} color={colors.violetLight} />
+          <TouchableOpacity style={styles.brainDumpBtn} onPress={() => setShowBrainDump(true)}>
+            <Ionicons name="create-outline" size={16} color={colors.violetLight} />
+            <Text style={styles.brainDumpBtnText}>Brain Dump</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.addBtn} onPress={() => setShowAdd(true)}>
             <Ionicons name="add" size={20} color={colors.white} />
@@ -390,15 +391,21 @@ const styles = StyleSheet.create({
   },
   title: { ...typography.h2 },
   headerActions: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center' },
-  iconBtn: {
-    width: 38,
+  brainDumpBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     height: 38,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: colors.violetLight + '60',
+    backgroundColor: colors.violet + '20',
+  },
+  brainDumpBtnText: {
+    color: colors.violetLight,
+    fontSize: 13,
+    fontWeight: '600',
   },
   addBtn: {
     flexDirection: 'row',
