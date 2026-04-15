@@ -3,8 +3,18 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Task = require('../models/Task');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const { chunkTask, parseBrainDump } = require('../src/services/aiService');
+
+// Rate limit AI-powered endpoints: 20 requests per hour per IP
+const aiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many AI requests, please try again later' },
+});
 
 
 // ✅ Local ML
@@ -157,11 +167,12 @@ router.get('/ai/suggestions', auth, async (req, res) => {
 });
 
 // ─── BRAIN DUMP ──────────────────────────────────────────────────────
-router.post('/brain-dump', auth, async (req, res) => {
+router.post('/brain-dump', auth, aiLimiter, async (req, res) => {
   try {
     const { text } = req.body;
 
-    if (!text) return res.status(400).json({ error: 'No text provided' });
+    if (!text || typeof text !== 'string') return res.status(400).json({ error: 'No text provided' });
+    if (text.length > 5000) return res.status(400).json({ error: 'Brain dump text must be 5000 characters or fewer' });
 
     const suggestions = await parseBrainDump(text);
 
@@ -198,7 +209,8 @@ router.get('/:id', auth, async (req, res) => {
     return res.status(400).json({ error: 'Invalid task id' });
   }
 
-  const t = await Task.findById(req.params.id);
+  const t = await Task.findOne({ _id: req.params.id, userId: req.userId });
+  if (!t) return res.status(404).json({ error: 'Task not found' });
   res.json({ task: t });
 });
 
@@ -206,9 +218,16 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   const { title, dueAt, estimateMins, dreadScore } = req.body;
 
+  if (!title || typeof title !== 'string' || title.trim().length === 0) {
+    return res.status(400).json({ error: 'Task title is required' });
+  }
+  if (title.length > 500) {
+    return res.status(400).json({ error: 'Task title must be 500 characters or fewer' });
+  }
+
   const doc = await Task.create({
     userId: req.userId,
-    title,
+    title: title.trim(),
     dueAt: dueAt ? new Date(dueAt) : null,
     estimateMins,
     dreadScore: dreadScore || 3,
@@ -225,8 +244,17 @@ router.put('/:id', auth, async (req, res) => {
 
   const { title, dueAt, estimateMins, dreadScore } = req.body;
 
+  if (title !== undefined) {
+    if (typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Task title cannot be empty' });
+    }
+    if (title.length > 500) {
+      return res.status(400).json({ error: 'Task title must be 500 characters or fewer' });
+    }
+  }
+
   const update = {};
-  if (title !== undefined) update.title = title;
+  if (title !== undefined) update.title = title.trim();
   if (dueAt !== undefined) update.dueAt = dueAt ? new Date(dueAt) : null;
   if (estimateMins !== undefined) update.estimateMins = estimateMins;
   if (dreadScore !== undefined) update.dreadScore = dreadScore;
@@ -248,10 +276,13 @@ router.put('/:id/complete', auth, async (req, res) => {
     return res.status(400).json({ error: 'Invalid task id' });
   }
 
-  await Task.findByIdAndUpdate(req.params.id, {
-    completed: true,
-    completedAt: new Date(),
-  });
+  const task = await Task.findOneAndUpdate(
+    { _id: req.params.id, userId: req.userId },
+    { completed: true, completedAt: new Date() },
+    { new: true }
+  );
+
+  if (!task) return res.status(404).json({ error: 'Task not found' });
 
   res.json({ ok: true });
 });
@@ -292,13 +323,13 @@ router.put('/:id/complete', auth, async (req, res) => {
 //   res.json({ task });
 // });
 
-router.post('/:id/auto-chunk', auth, async (req, res) => {
+router.post('/:id/auto-chunk', auth, aiLimiter, async (req, res) => {
   try {
     if (!isValidObjectId(req.params.id)) {
       return res.status(400).json({ error: 'Invalid task id' });
     }
 
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, userId: req.userId });
     if (!task) return res.status(404).json({ error: 'not found' });
 
     const steps = await chunkTask(task.title);
