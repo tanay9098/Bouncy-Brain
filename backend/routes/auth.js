@@ -3,6 +3,16 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+
+// Strict rate limit for auth endpoints: 10 attempts per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later' },
+});
 
 // create token
 function makeToken(id){
@@ -10,9 +20,18 @@ function makeToken(id){
 }
 
 // Signup
-router.post('/signup', async (req,res)=>{
+router.post('/signup', authLimiter, async (req,res)=>{
   const { email, password, name } = req.body;
   if(!email || !password) return res.status(400).json({ error: 'email and password required' });
+
+  // Password strength: minimum 8 chars, at least one letter and one number
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    return res.status(400).json({ error: 'Password must contain at least one letter and one number' });
+  }
+
   const exists = await User.findOne({ email });
   if(exists) return res.status(400).json({ error: 'Email already registered' });
   const passwordHash = await bcrypt.hash(password, 10);
@@ -22,7 +41,7 @@ router.post('/signup', async (req,res)=>{
 });
 
 // Login
-router.post('/login', async (req,res)=>{
+router.post('/login', authLimiter, async (req,res)=>{
   const { email, password } = req.body;
   if(!email || !password) return res.status(400).json({ error: 'email and password required' });
   const user = await User.findOne({ email });
