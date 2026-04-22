@@ -52,7 +52,7 @@ export const authApi = {
 
 // ---------- Tasks ----------
 export const tasksApi = {
-  getAll: () => apiClient.get('/tasks'),
+  getAll: () => apiClient.get('/tasks').then((r) => ({ ...r, data: r.data.tasks ?? [] })),
   create: (payload: { title: string; dueAt?: string; estimateMins?: number; dreadScore?: number }) =>
     apiClient.post('/tasks', payload),
   update: (id: string, payload: Partial<{ title: string; dueAt: string; estimateMins: number; dreadScore: number; completed: boolean }>) =>
