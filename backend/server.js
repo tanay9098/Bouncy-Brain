@@ -60,6 +60,16 @@ app.use("/api/priority", priorityRoutes);
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
 
+// Root route for platform checks and direct browser visits
+app.get('/', (req, res) => {
+  res.status(200).json({
+    service: 'Bouncy Brain Backend',
+    ok: true,
+    message: 'API is running. Use /api/* endpoints.',
+    health: '/ping',
+  });
+});
+
 // Schedule cron: run deadline checker every 5 minutes
 cron.schedule('*/5 * * * *', async () => {
   try {
