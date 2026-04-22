@@ -25,6 +25,3 @@ dist-ssr
 
 # Misc
 .env
-
-# Expo (mobile) — should not be in the web app folder
-.expo
