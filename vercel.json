@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd bouncy-brain && npm install",
+  "buildCommand": "cd bouncy-brain && npm run build",
+  "outputDirectory": "bouncy-brain/dist",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
