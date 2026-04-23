@@ -13,7 +13,7 @@ import aiRoutes from './routes/ai';
 import habitsRoutes from './routes/habits';
 import analyticsRoutes from './routes/analytics';
 
-import deadlineChecker from '../jobs/deadlineChecker';
+import deadlineChecker from './jobs/deadlineChecker';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -45,8 +45,9 @@ async function start() {
     deadlineChecker();
   }, 5 * 60 * 1000);
 
-  server.listen(3001, () => {
-    console.log('Server running on port 3001');
+  const PORT = process.env.PORT || 3001;
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
 }
 
