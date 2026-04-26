@@ -30,19 +30,19 @@ function PriorityBadge({ level }) {
 
 // ── Suggestion style helpers ─────────────────────────────────────────────
 const SUGGESTION_STYLES = {
-  priority:   { borderLeft: "3px solid #7c3aed", background: "var(--violet-dim)" },
-  chunk:      { borderLeft: "3px solid #10b981", background: "var(--green-dim)" },
-  deadline:   { borderLeft: "3px solid #ef4444", background: "var(--red-dim)" },
+  priority:    { borderLeft: "3px solid #7c3aed", background: "var(--violet-dim)" },
+  chunk:       { borderLeft: "3px solid #10b981", background: "var(--green-dim)" },
+  deadline:    { borderLeft: "3px solid #ef4444", background: "var(--red-dim)" },
   "quick-win": { borderLeft: "3px solid #f59e0b", background: "var(--amber-dim)" },
-  nudge:      { borderLeft: "3px solid #3b82f6", background: "rgba(59,130,246,0.08)" },
+  nudge:       { borderLeft: "3px solid #3b82f6", background: "rgba(59,130,246,0.08)" },
 };
 
 const SUGGESTION_LABELS = {
-  priority: "Priority",
-  chunk: "Break Down",
-  deadline: "Urgent",
+  priority:    "Priority",
+  chunk:       "Break Down",
+  deadline:    "Urgent",
   "quick-win": "Quick Win",
-  nudge: "Motivation",
+  nudge:       "Tip",
 };
 
 export default function TodoList() {
@@ -89,7 +89,7 @@ export default function TodoList() {
   useEffect(() => {
     if (tasks.length > 0) fetchSuggestions();
     else setSuggestions([]);
-  }, [tasks.length]);
+  }, [tasks.length, energy]);
 
   // ── Data ──────────────────────────────────────────────────────────────
   async function load() {
@@ -102,9 +102,31 @@ export default function TodoList() {
   async function fetchSuggestions() {
     setSuggestionsLoading(true);
     try {
-      const res = await api.get("/tasks/ai/suggestions");
-      const fresh = (res.suggestions || []).filter((s) => !dismissedIds.has(s.id));
-      setSuggestions(fresh);
+      const [suggestRes, mindRes] = await Promise.allSettled([
+        api.get(`/tasks/ai/suggestions?energyLevel=${energy}`),
+        api.get(`/recommendations/mindfulness?energyLevel=${energy}`),
+      ]);
+
+      if (suggestRes.status === "fulfilled") {
+        const allSuggestions = suggestRes.value.suggestions || [];
+
+        // Prepend mindfulness nudge if suggested
+        if (mindRes.status === "fulfilled" && mindRes.value.suggested && mindRes.value.top) {
+          const m = mindRes.value.top;
+          allSuggestions.unshift({
+            id: "mindful_" + Date.now(),
+            type: "nudge",
+            title: `🧘 ${m.title}`,
+            description: m.description,
+            action: "mindfulness",
+          });
+        }
+
+        const fresh = allSuggestions.filter((s) => !dismissedIds.has(s.id));
+        setSuggestions(fresh);
+      } else {
+        setSuggestions([]);
+      }
     } catch { setSuggestions([]); }
     finally { setSuggestionsLoading(false); }
   }
@@ -193,6 +215,12 @@ export default function TodoList() {
   function acceptSuggestion(s) {
     if (s.type === "quick-win" && s.taskId) {
       complete(s.taskId);
+    } else if (s.action === "mindfulness") {
+      window.location.href = "/mindful";
+      return;
+    } else if (s.action === "prioritize" && s.taskId) {
+      // Scroll task into view
+      document.getElementById(`task-${s.taskId}`)?.scrollIntoView({ behavior: "smooth" });
     }
     setSuggestions((p) => p.filter((x) => x.id !== s.id));
     setDismissedIds((p) => new Set([...p, s.id]));

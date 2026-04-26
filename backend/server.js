@@ -11,11 +11,11 @@ const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
 const sessionRoutes = require('./routes/sessions');
 const pushRoutes = require('./routes/push');
-
 const statsRoutes = require('./routes/stats');
+const priorityRoutes = require('./routes/priority');
+const recommendationsRoutes = require('./routes/recommendations');
 
 const deadlineChecker = require('./jobs/deadlineChecker');
-const priorityRoutes = require("./routes/priority");
 
 
 const app = express();
@@ -30,9 +30,10 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow Chrome extension origins
+    if (origin.startsWith('chrome-extension://')) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -54,8 +55,8 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/stats', statsRoutes);
 
-app.use("/api/priority", priorityRoutes);
-
+app.use('/api/priority', priorityRoutes);
+app.use('/api/recommendations', recommendationsRoutes);
 
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
