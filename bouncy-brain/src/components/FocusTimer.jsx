@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import api from "../services/api";
-import { setFocusActive } from "./FocusOverlay";
+import { setFocusActive, getDistractionCount, resetDistractionCount } from "./FocusOverlay";
 import Affirmations from "./Affirmations";
 
 const CIRCUMFERENCE = 2 * Math.PI * 90; // r = 90
@@ -65,10 +65,15 @@ export default function FocusTimer() {
       setSessionCount((c) => c + 1);
       showReward("🔥");
       if (affirmRef.current) affirmRef.current.messageForContext("task-complete");
+      const distractionCount = getDistractionCount();
+      resetDistractionCount();
+      const energyLevel = parseInt(localStorage.getItem("bb-energy") || "3", 10);
       try {
         await api.post("/sessions", {
           type: MODES[modeIdx].id,
           durationMins: workMins,
+          distractionCount,
+          energyLevel,
         });
       } catch {}
     } else {

@@ -25,9 +25,16 @@ export function setFocusActive(active, taskName = "") {
   if (_bridge) _bridge(active, taskName);
 }
 
+// Distraction counter accessible to FocusTimer on session complete
+let _distractionCount = 0;
+let _distractionCountRef = { current: 0 };
+export function getDistractionCount() { return _distractionCountRef.current; }
+export function resetDistractionCount() { _distractionCountRef.current = 0; }
+
 export default function FocusOverlay() {
   const [state, setStateRaw] = useState(STATES.IDLE);
   const [taskName, setTaskName] = useState("");
+  const [distractionCount, setDistractionCount] = useState(0);
   const stateRef = useRef(STATES.IDLE);
   const debounceRef = useRef(null);
 
@@ -42,6 +49,8 @@ export default function FocusOverlay() {
       if (active) {
         setState(STATES.FOCUSED);
         setTaskName(name);
+        setDistractionCount(0);
+        _distractionCountRef.current = 0;
       } else {
         clearTimeout(debounceRef.current);
         setState(STATES.IDLE);
@@ -58,11 +67,15 @@ export default function FocusOverlay() {
         if (stateRef.current === STATES.FOCUSED) {
           setState(STATES.DISTRACTED);
           debounceRef.current = setTimeout(() => {
-            // Only escalate if still distracted (not already dismissed)
             if (stateRef.current === STATES.DISTRACTED) {
               setState(STATES.ALERT);
-                tabAlertSound.play();
-
+              tabAlertSound.play();
+              // Track distraction count for ML
+              setDistractionCount((c) => {
+                const next = c + 1;
+                _distractionCountRef.current = next;
+                return next;
+              });
             }
           }, 800);
         }

@@ -47,33 +47,36 @@ router.get('/', auth, async (req, res) => {
 
 // ─── WHAT NEXT ──────────────────────────────────────────────────────
 router.get('/what-next', auth, async (req, res) => {
-  const tasks = await Task.find({
-    userId: req.userId,
-    completed: false,
-  });
+  const energyLevel = parseInt(req.query.energyLevel || '3', 10);
 
+  const tasks = await Task.find({ userId: req.userId, completed: false });
   if (!tasks.length) return res.json({ task: null });
+
+  const completedTasks = await Task.find({ userId: req.userId, completed: true }).limit(50).lean();
+  const totalTasks = await Task.countDocuments({ userId: req.userId });
+  const completionRate = totalTasks > 0 ? completedTasks.length / totalTasks : 0.5;
+  const lateCount = completedTasks.filter((ct) => ct.completedAt && ct.dueAt && new Date(ct.completedAt) > new Date(ct.dueAt)).length;
+  const procRate = completedTasks.length > 0 ? lateCount / completedTasks.length : 0.3;
 
   const ranked = tasks.map((t) => {
     const payload = {
-      completion_rate: 0.5,
-      deadline_days: t.dueAt
-        ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24)
-        : 30,
+      completion_rate: completionRate,
+      deadline_days: t.dueAt ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24) : 30,
       estimated_time: t.estimateMins || 30,
       urgency_self: t.importance || 1,
-      historical_procrastination_rate: 0.4,
+      historical_procrastination_rate: procRate,
+      energy_level: energyLevel,
+      dread_score: t.dreadScore || 3,
+      title: t.title,
     };
-
-    return {
-      task: t,
-      score: predictPriority(payload).score,
-    };
+    const result = predictPriority(payload);
+    return { task: t, score: result.score, reason: result.reason, category: result.category };
   });
 
   ranked.sort((a, b) => b.score - a.score);
+  const top = ranked[0];
 
-  res.json({ task: ranked[0].task });
+  res.json({ task: top.task, reason: top.reason, category: top.category });
 });
 
 // ─── AI SUGGESTIONS ─────────────────────────────────────────────────
@@ -110,6 +113,8 @@ router.get('/ai/suggestions', auth, async (req, res) => {
 
     const suggestions = [];
 
+    const energyLevel = parseInt(req.query.energyLevel || '3', 10);
+
     const ranked = tasks.map((t) => {
       const deadlineDays = t.dueAt
         ? (new Date(t.dueAt) - new Date()) / (1000 * 60 * 60 * 24)
@@ -121,6 +126,9 @@ router.get('/ai/suggestions', auth, async (req, res) => {
         estimated_time: t.estimateMins || 30,
         urgency_self: t.importance || 1,
         historical_procrastination_rate: procrastinationRate,
+        energy_level: energyLevel,
+        dread_score: t.dreadScore || 3,
+        title: t.title,
       };
 
       const result = predictPriority(payload);
@@ -130,21 +138,40 @@ router.get('/ai/suggestions', auth, async (req, res) => {
         title: t.title,
         priority: result.priority,
         score: result.score,
+        reason: result.reason,
+        category: result.category,
       };
     });
 
     ranked.sort((a, b) => b.score - a.score);
 
     if (ranked.length > 0) {
+      const top = ranked[0];
       suggestions.push({
         id: 'priority_' + Date.now(),
         type: 'priority',
-        title: `🎯 Start with "${ranked[0].title}"`,
-        description:
-          'This task fits your current situation and should be your top priority.',
-        taskId: ranked[0].taskId,
+        title: `🎯 Start with "${top.title}"`,
+        description: top.reason || 'This task fits your current situation and should be your top priority.',
+        taskId: top.taskId,
         action: 'prioritize',
+        category: top.category,
       });
+    }
+
+    // Energy-aware nudge: high-dread tasks at high energy
+    if (energyLevel >= 4) {
+      const dreadyTask = tasks.filter((t) => (t.dreadScore || 3) >= 4).sort((a, b) => (b.dreadScore || 3) - (a.dreadScore || 3))[0];
+      if (dreadyTask && dreadyTask._id.toString() !== (ranked[0]?.taskId?.toString())) {
+        suggestions.push({
+          id: 'energy_' + Date.now(),
+          type: 'nudge',
+          title: `💪 High energy: tackle "${dreadyTask.title}"`,
+          description: 'Your energy is high — perfect time to face this challenging task before it drains you.',
+          taskId: dreadyTask._id,
+          action: 'prioritize',
+          category: 'high-dread',
+        });
+      }
     }
 
     const quickTask = tasks.find((t) => (t.estimateMins || 30) <= 15);
@@ -153,9 +180,20 @@ router.get('/ai/suggestions', auth, async (req, res) => {
         id: 'quick_' + Date.now(),
         type: 'quick-win',
         title: `⚡ Quick win: "${quickTask.title}"`,
-        description: 'Finish this quickly to build momentum.',
+        description: 'Finish this in ~15 minutes to build momentum.',
         taskId: quickTask._id,
         action: 'complete',
+      });
+    }
+
+    // Procrastination alert
+    if (procrastinationRate > 0.5 && ranked.length > 0) {
+      suggestions.push({
+        id: 'proc_' + Date.now(),
+        type: 'nudge',
+        title: '⏰ Pattern detected',
+        description: `You complete ${Math.round(procrastinationRate * 100)}% of tasks late. Try the 2-minute rule: if it takes less than 2 minutes, do it now.`,
+        action: 'none',
       });
     }
 
