@@ -1,26 +1,70 @@
 const express = require('express');
 const router = express.Router();
 const Session = require('../models/Session');
+const DistractionEvent = require('../models/DistractionEvent');
 const jwt = require('jsonwebtoken');
 
-function auth(req,res,next){
-  const h = req.headers.authorization || '';
-  const token = h.replace('Bearer ','');
-  if(!token) return res.status(401).end();
-  try { const payload = jwt.verify(token, process.env.JWT_SECRET); req.userId = payload.id; next(); } catch(e){ return res.status(401).end(); }
+function auth(req, res, next) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) return res.status(401).end();
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = payload.id;
+    next();
+  } catch {
+    return res.status(401).end();
+  }
 }
 
-// Create a session (called when a timer completes)
-router.post('/', auth, async (req,res)=>{
-  const { type, subject, durationMins } = req.body;
-  const s = await Session.create({ userId: req.userId, type, subject, durationMins, completedAt: new Date() });
-  res.json({ session: s });
+// POST /api/sessions — log a completed focus session
+router.post('/', auth, async (req, res) => {
+  const { type, subject, durationMins, distractionCount, energyLevel } = req.body;
+
+  const session = await Session.create({
+    userId: req.userId,
+    type,
+    subject,
+    durationMins,
+    completedAt: new Date(),
+  });
+
+  // Persist distraction data if provided
+  if (distractionCount != null && distractionCount > 0) {
+    const now = new Date();
+    await DistractionEvent.create({
+      userId: req.userId,
+      sessionId: session._id,
+      tabSwitchCount: distractionCount,
+      sessionType: type || 'pomodoro',
+      sessionDurationMins: durationMins,
+      energyLevel: energyLevel || null,
+      hourOfDay: now.getHours(),
+      dayOfWeek: now.getDay(),
+    });
+  }
+
+  res.json({ session });
 });
 
-// optional: list sessions (not necessary for UI but convenient)
-router.get('/', auth, async (req,res)=>{
+// GET /api/sessions — list recent sessions
+router.get('/', auth, async (req, res) => {
   const sessions = await Session.find({ userId: req.userId }).sort({ completedAt: -1 }).limit(50);
   res.json({ sessions });
+});
+
+// GET /api/sessions/distraction-stats — distraction stats for ML
+router.get('/distraction-stats', auth, async (req, res) => {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const events = await DistractionEvent.find({
+    userId: req.userId,
+    recordedAt: { $gte: oneDayAgo },
+  }).lean();
+
+  const avgTabSwitches = events.length > 0
+    ? events.reduce((s, e) => s + (e.tabSwitchCount || 0), 0) / events.length
+    : 0;
+
+  res.json({ avgTabSwitches, sessionCount: events.length, events: events.slice(0, 10) });
 });
 
 module.exports = router;
