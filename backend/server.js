@@ -26,7 +26,7 @@ app.use(helmet());
 // Restrict CORS to known origins
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
-  .map(o => o.trim());
+  .map(o => o.trim().replace(/\/$/, ''));
 
 app.use(cors({
   origin: (origin, callback) => {
