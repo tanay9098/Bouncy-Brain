@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 
@@ -139,10 +139,72 @@ def build_feature_vector(task: dict, ctx: dict, history: dict) -> list:
     ]
 
 
+def train_model_from_tasks(completed_tasks: List[dict]) -> Optional[RandomForestRegressor]:
+    """Build and fit a per-user model from completed task history.
+
+    Returns None when there isn't enough valid data to train.
+    """
+    ct = completed_tasks or []
+    if len(ct) < 5:
+        return None
+
+    late_count = sum(
+        1 for t in ct
+        if t.get("dueAt") and t.get("completedAt") and str(t["completedAt"]) > str(t["dueAt"])
+    )
+    history_dict = {
+        "completion_rate": min(1.0, len(ct) / max(len(ct) + 5, 1)),
+        "procrastination_rate": late_count / len(ct) if ct else 0.3,
+    }
+
+    X, y = [], []
+    for task in ct:
+        if not task.get("completedAt") or not task.get("createdAt"):
+            continue
+        try:
+            created = datetime.fromisoformat(str(task["createdAt"]).replace("Z", "+00:00"))
+            completed = datetime.fromisoformat(str(task["completedAt"]).replace("Z", "+00:00"))
+            days_taken = max(0.1, (completed - created).total_seconds() / 86400)
+        except Exception:
+            days_taken = 7
+
+        deadline_days = 30
+        if task.get("dueAt"):
+            try:
+                due = datetime.fromisoformat(str(task["dueAt"]).replace("Z", "+00:00"))
+                created_p = datetime.fromisoformat(str(task["createdAt"]).replace("Z", "+00:00"))
+                deadline_days = max(0.1, (due - created_p).total_seconds() / 86400)
+            except Exception:
+                pass
+
+        task_dict = {
+            "title": task.get("title", ""),
+            "deadline_days": deadline_days,
+            "estimate_mins": task.get("estimateMins", 30),
+            "dread_score": task.get("dreadScore", 3),
+            "importance": task.get("importance", 1),
+        }
+        ctx = {"energy_level": 3, "hour": 10, "day_of_week": 0}
+        features = build_feature_vector(task_dict, ctx, history_dict)
+        target = min(1.0, max(0.1, deadline_days / (days_taken * 2 + 0.1)))
+        X.append(features)
+        y.append(target)
+
+    if len(X) < 5:
+        return None
+
+    model = RandomForestRegressor(n_estimators=50, max_depth=5, random_state=42)
+    model.fit(X, y)
+    model.training_samples_ = len(X)
+    return model
+
+
 # ─── Schemas ─────────────────────────────────────────────────────────────────
 
 class TaskItem(BaseModel):
-    id: Optional[str] = None
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: Optional[str] = Field(None, alias="_id")
     title: str
     dueAt: Optional[str] = None
     estimateMins: Optional[int] = 30
@@ -221,8 +283,16 @@ def recommend(req: RecommendRequest):
             "avg_distraction_count": req.history.avg_distraction_count or 0.0,
         }
 
+    completed_tasks = (req.history.completed_tasks if req.history else []) or []
+    has_enough_history = len(completed_tasks) >= 10
+
     user_model = user_models.get(req.userId) if req.userId else None
-    has_enough_history = len((req.history.completed_tasks if req.history else []) or []) >= 10
+    # Lazy retrain: models live in memory only, so after a restart rebuild the
+    # user's model on the fly from the history included in the request.
+    if user_model is None and req.userId and has_enough_history:
+        user_model = train_model_from_tasks(completed_tasks)
+        if user_model is not None:
+            user_models[req.userId] = user_model
 
     scored = []
     for task in req.tasks:
@@ -267,63 +337,19 @@ def recommend(req: RecommendRequest):
 
 @app.post("/train-user")
 def train_user(req: TrainUserRequest):
-    ct = req.completed_tasks
-    if len(ct) < 5:
+    if len(req.completed_tasks) < 5:
         return {"status": "skipped", "reason": "Need at least 5 completed tasks to train"}
 
-    late_count = sum(
-        1 for t in ct
-        if t.get("dueAt") and t.get("completedAt") and str(t["completedAt"]) > str(t["dueAt"])
-    )
-    history_dict = {
-        "completion_rate": min(1.0, len(ct) / max(len(ct) + 5, 1)),
-        "procrastination_rate": late_count / len(ct) if ct else 0.3,
-    }
-
-    X, y = [], []
-    for task in ct:
-        if not task.get("completedAt") or not task.get("createdAt"):
-            continue
-        try:
-            created = datetime.fromisoformat(str(task["createdAt"]).replace("Z", "+00:00"))
-            completed = datetime.fromisoformat(str(task["completedAt"]).replace("Z", "+00:00"))
-            days_taken = max(0.1, (completed - created).total_seconds() / 86400)
-        except Exception:
-            days_taken = 7
-
-        deadline_days = 30
-        if task.get("dueAt"):
-            try:
-                due = datetime.fromisoformat(str(task["dueAt"]).replace("Z", "+00:00"))
-                created_p = datetime.fromisoformat(str(task["createdAt"]).replace("Z", "+00:00"))
-                deadline_days = max(0.1, (due - created_p).total_seconds() / 86400)
-            except Exception:
-                pass
-
-        task_dict = {
-            "title": task.get("title", ""),
-            "deadline_days": deadline_days,
-            "estimate_mins": task.get("estimateMins", 30),
-            "dread_score": task.get("dreadScore", 3),
-            "importance": task.get("importance", 1),
-        }
-        ctx = {"energy_level": 3, "hour": 10, "day_of_week": 0}
-        features = build_feature_vector(task_dict, ctx, history_dict)
-        target = min(1.0, max(0.1, deadline_days / (days_taken * 2 + 0.1)))
-        X.append(features)
-        y.append(target)
-
-    if len(X) < 5:
+    model = train_model_from_tasks(req.completed_tasks)
+    if model is None:
         return {"status": "skipped", "reason": "Not enough valid task data for training"}
 
-    model = RandomForestRegressor(n_estimators=50, max_depth=5, random_state=42)
-    model.fit(X, y)
     user_models[req.userId] = model
 
     feature_names = ["urgency", "effort", "dread", "importance", "energy", "hour", "day", "cat_match", "dread_energy", "completion_rate", "proc_rate"]
     return {
         "status": "trained",
-        "training_samples": len(X),
+        "training_samples": model.training_samples_,
         "feature_importance": dict(zip(feature_names, [round(float(v), 3) for v in model.feature_importances_])),
     }
 

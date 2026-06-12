@@ -382,6 +382,7 @@ router.post("/prioritize", auth, async (req, res) => {
           ""
         ) + "/recommend",
         {
+          userId: String(req.userId),
           tasks: tasks.map((t) => ({
             _id: t._id,
             title: t.title,

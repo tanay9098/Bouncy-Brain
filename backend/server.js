@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -14,6 +13,8 @@ const pushRoutes = require('./routes/push');
 const statsRoutes = require('./routes/stats');
 const priorityRoutes = require('./routes/priority');
 const recommendationsRoutes = require('./routes/recommendations');
+const habitsRoutes = require('./routes/habits');
+const aiRoutes = require('./routes/ai');
 
 const deadlineChecker = require('./jobs/deadlineChecker');
 
@@ -41,7 +42,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-app.use(bodyParser.json({ limit: '50kb' }));
+app.use(express.json({ limit: '50kb' }));
 
 // connect mongodb
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -57,19 +58,27 @@ app.use('/api/stats', statsRoutes);
 
 app.use('/api/priority', priorityRoutes);
 app.use('/api/recommendations', recommendationsRoutes);
+app.use('/api/habits', habitsRoutes);
+app.use('/api/ai', aiRoutes);
 
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
+app.get('/health', (req,res)=> res.json({ status: 'ok' }));
 
-// Schedule cron: run deadline checker every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
-  try {
-    console.log('[cron] running deadline checker');
-    await deadlineChecker();
-  } catch(err) {
-    console.error('[cron] checker error', err);
-  }
-});
+// Cron and the HTTP listener only run on a real server (not Vercel serverless)
+if (!process.env.VERCEL) {
+  // Schedule cron: run deadline checker every 5 minutes
+  cron.schedule('*/5 * * * *', async () => {
+    try {
+      console.log('[cron] running deadline checker');
+      await deadlineChecker();
+    } catch(err) {
+      console.error('[cron] checker error', err);
+    }
+  });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;

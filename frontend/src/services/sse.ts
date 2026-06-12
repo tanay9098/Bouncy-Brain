@@ -7,7 +7,7 @@ export function createSSEStream(
   const controller = new AbortController()
   const token = localStorage.getItem('accessToken')
 
-  fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}${url}`, {
+  fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}${url}`, {
     headers: { Authorization: `Bearer ${token}` },
     signal: controller.signal,
   })

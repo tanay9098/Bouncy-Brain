@@ -5,7 +5,7 @@ const Task = require('../models/Task');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 
-const { chunkTask, parseBrainDump } = require('../src/services/aiService');
+const { chunkTask, parseBrainDump } = require('../services/aiService');
 
 // Rate limit AI-powered endpoints: 20 requests per hour per IP
 const aiLimiter = rateLimit({
