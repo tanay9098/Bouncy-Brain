@@ -325,41 +325,6 @@ router.put('/:id/complete', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── AUTO CHUNK TASK ────────────────────────────────────────────────
-// router.post('/:id/auto-chunk', auth, async (req, res) => {
-//   const task = await Task.findById(req.params.id);
-//   if (!task) return res.status(404).json({ error: 'not found' });
-
-//   // Optional ML chunk API
-//   if (process.env.ML_CHUNK_URL) {
-//     try {
-//       const r = await axios.post(process.env.ML_CHUNK_URL, {
-//         text: task.title,
-//         estimateMins: task.estimateMins,
-//       });
-
-//       const subs = r.data.subtasks || r.data.chunks || [];
-//       task.subtasks = subs.map((s) => ({ title: s.title || s }));
-//       await task.save();
-
-//       return res.json({ task });
-//     } catch (e) {
-//       console.warn('ml chunk failed', e.message);
-//     }
-//   }
-
-//   // Fallback chunking
-//   const chunks = [
-//     { title: task.title + ' — part 1', completed: false },
-//     { title: task.title + ' — part 2', completed: false },
-//     { title: task.title + ' — part 3', completed: false },
-//   ];
-
-//   task.subtasks = chunks;
-//   await task.save();
-
-//   res.json({ task });
-// });
 
 router.post('/:id/auto-chunk', auth, aiLimiter, async (req, res) => {
   try {
