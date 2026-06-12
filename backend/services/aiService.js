@@ -131,4 +131,30 @@ User brain dump:
   }
 }
 
-module.exports = { chunkTask, parseBrainDump };
+async function streamChatResponse(messages, systemPrompt, res) {
+  const client = getClient();
+  if (!client) {
+    return res.status(503).json({ error: "AI service not configured" });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const stream = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) {
+      res.write(`data: ${JSON.stringify({ text: delta })}\n\n`);
+    }
+  }
+  res.write("data: [DONE]\n\n");
+  res.end();
+}
+
+module.exports = { chunkTask, parseBrainDump, streamChatResponse };
