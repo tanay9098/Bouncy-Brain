@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getToken, getUser, setToken, setUser } from './utils/storage.js'
+import { connectSocket, disconnectSocket } from './utils/socket.js'
 import AuthScreen from './components/AuthScreen.jsx'
 import WhatNext from './components/WhatNext.jsx'
 import QuickTaskAdd from './components/QuickTaskAdd.jsx'
@@ -12,6 +13,7 @@ export default function App() {
   const [user, setUserState] = useState(null)
   const [tab, setTab] = useState('next')
   const [loading, setLoading] = useState(true)
+  const [taskRevision, setTaskRevision] = useState(0)
 
   useEffect(() => {
     Promise.all([getToken(), getUser()]).then(([token, u]) => {
@@ -20,6 +22,25 @@ export default function App() {
     })
   }, [])
 
+  // Connect socket when authed; bump taskRevision on task events so WhatNext refetches
+  useEffect(() => {
+    if (!authed) return;
+
+    let mounted = true;
+    connectSocket().then((s) => {
+      if (!s || !mounted) return;
+      const bump = () => { if (mounted) setTaskRevision((v) => v + 1) };
+      s.on('task:created', bump);
+      s.on('task:updated', bump);
+      s.on('tasks:refetch', bump);
+    });
+
+    return () => {
+      mounted = false;
+      disconnectSocket();
+    };
+  }, [authed]);
+
   async function onLogin(token, userData) {
     await Promise.all([setToken(token), setUser(userData)])
     setAuthed(true)
@@ -27,6 +48,7 @@ export default function App() {
   }
 
   async function onLogout() {
+    disconnectSocket()
     const { clearAuth } = await import('./utils/storage.js')
     await clearAuth()
     setAuthed(false)
@@ -63,7 +85,7 @@ export default function App() {
       </header>
 
       <div className="popup-content">
-        {tab === 'next'  && <WhatNext />}
+        {tab === 'next'  && <WhatNext taskRevision={taskRevision} />}
         {tab === 'add'   && <QuickTaskAdd onAdded={() => setTab('next')} />}
         {tab === 'dump'  && <QuickBrainDump />}
         {tab === 'timer' && <QuickTimer />}
