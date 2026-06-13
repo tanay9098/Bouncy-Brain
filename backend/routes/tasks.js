@@ -233,6 +233,7 @@ router.post('/brain-dump', auth, aiLimiter, async (req, res) => {
       tasks.push(task);
     }
 
+    req.app.get('io')?.to(`user:${req.userId}`).emit('tasks:refetch');
     res.json({ tasks, source: process.env.OPENAI_API_KEY ? 'openai' : 'fallback' });
 
   } catch (err) {
@@ -271,6 +272,7 @@ router.post('/', auth, async (req, res) => {
     dreadScore: dreadScore || 3,
   });
 
+  req.app.get('io')?.to(`user:${req.userId}`).emit('task:created', doc);
   res.json({ task: doc });
 });
 
@@ -305,6 +307,7 @@ router.put('/:id', auth, async (req, res) => {
 
   if (!task) return res.status(404).json({ error: 'Task not found' });
 
+  req.app.get('io')?.to(`user:${req.userId}`).emit('task:updated', task);
   res.json({ task });
 });
 
@@ -322,6 +325,7 @@ router.put('/:id/complete', auth, async (req, res) => {
 
   if (!task) return res.status(404).json({ error: 'Task not found' });
 
+  req.app.get('io')?.to(`user:${req.userId}`).emit('task:updated', task);
   res.json({ ok: true });
 });
 
@@ -344,6 +348,7 @@ router.post('/:id/auto-chunk', auth, aiLimiter, async (req, res) => {
 
     await task.save();
 
+    req.app.get('io')?.to(`user:${req.userId}`).emit('task:updated', task);
     res.json({ task });
 
   } catch (err) {

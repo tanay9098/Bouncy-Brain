@@ -1,10 +1,13 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
+const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cron = require('node-cron');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
 
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
@@ -20,6 +23,42 @@ const deadlineChecker = require('./jobs/deadlineChecker');
 
 
 const app = express();
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = (process.env.FRONTEND_URL || 'http://localhost:5173')
+        .split(',').map(o => o.trim().replace(/\/$/, ''));
+      if (allowed.includes(origin) || origin.startsWith('chrome-extension://')) {
+        return callback(null, true);
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  },
+});
+
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error('Unauthorized'));
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = payload.id;
+    next();
+  } catch {
+    next(new Error('Unauthorized'));
+  }
+});
+
+io.on('connection', (socket) => {
+  socket.join(`user:${socket.userId}`);
+  socket.on('disconnect', () => {});
+});
+
+// Make io accessible in route handlers via req.app.get('io')
+app.set('io', io);
 
 // Security headers
 app.use(helmet());
@@ -78,7 +117,7 @@ if (!process.env.VERCEL) {
   });
 
   const PORT = process.env.PORT || 4000;
-  app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));
+  httpServer.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));
 }
 
 module.exports = app;

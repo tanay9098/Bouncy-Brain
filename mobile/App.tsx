@@ -20,7 +20,7 @@ import { UserProvider } from './src/contexts/UserContext';
 import { EnergyProvider } from './src/contexts/EnergyContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 2,
