@@ -36,6 +36,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ error: 'name and frequency (daily|weekly) are required' });
     }
     const habit = await Habit.create({ userId: req.userId, name, frequency });
+    req.app.get('io')?.to(`user:${req.userId}`).emit('habit:created', habit);
     res.status(201).json({ habit });
   } catch (err) {
     console.error('[habits] create error:', err.message);
@@ -68,6 +69,7 @@ router.put('/:id', auth, async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
+    req.app.get('io')?.to(`user:${req.userId}`).emit('habit:updated', habit);
     res.json({ habit });
   } catch (err) {
     console.error('[habits] update error:', err.message);
@@ -80,6 +82,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const habit = await Habit.findOneAndDelete({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
+    req.app.get('io')?.to(`user:${req.userId}`).emit('habit:deleted', { _id: req.params.id });
     res.json({ message: 'Habit deleted' });
   } catch (err) {
     console.error('[habits] delete error:', err.message);
@@ -123,6 +126,7 @@ router.post('/:id/complete', auth, async (req, res) => {
     habit.completions.push(now);
     await habit.save();
 
+    req.app.get('io')?.to(`user:${req.userId}`).emit('habit:updated', habit);
     res.json({ habit, streak: habit.streak });
   } catch (err) {
     console.error('[habits] complete error:', err.message);

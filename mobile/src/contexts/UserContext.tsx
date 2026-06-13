@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { authApi } from '../services/api';
+import { connectSocket, disconnectSocket } from '../services/socket';
+import { queryClient } from '../../App';
 
 interface User {
   id: string;
@@ -38,6 +40,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     })();
   }, []);
+
+  // Connect socket when user logs in, disconnect on logout
+  useEffect(() => {
+    if (!user) return;
+    let socket: ReturnType<typeof connectSocket> | null = null;
+
+    (async () => {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) return;
+      socket = connectSocket(token);
+      socket.on('task:created', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+      socket.on('task:updated', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+      socket.on('tasks:refetch', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+      socket.on('habit:created', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+      socket.on('habit:updated', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+      socket.on('habit:deleted', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+    })();
+
+    return () => {
+      disconnectSocket();
+    };
+  }, [user]);
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await authApi.login(email, password);

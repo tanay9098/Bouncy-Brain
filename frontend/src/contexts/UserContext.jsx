@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
+import { connectSocket, disconnectSocket, getSocket } from "../services/socket";
+import { queryClient } from "../providers/QueryProvider";
 
 const ctx = createContext();
 export const useUser = () => useContext(ctx);
@@ -28,6 +30,23 @@ export function UserProvider({ children }) {
 
     setLoading(false);
   }, []);
+
+  // Connect socket when we have a token, disconnect on logout
+  useEffect(() => {
+    if (!token) return;
+    const socket = connectSocket(token);
+
+    socket.on('task:created', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+    socket.on('task:updated', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+    socket.on('tasks:refetch', () => queryClient.invalidateQueries({ queryKey: ['tasks'] }));
+    socket.on('habit:created', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+    socket.on('habit:updated', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+    socket.on('habit:deleted', () => queryClient.invalidateQueries({ queryKey: ['habits'] }));
+
+    return () => {
+      disconnectSocket();
+    };
+  }, [token]);
 
   // Save token whenever it changes
   function saveToken(t) {
