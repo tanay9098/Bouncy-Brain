@@ -4,7 +4,7 @@ import { get, set } from '../utils/storage.js'
 
 const ENERGY_LABELS = { 1: '💀 Exhausted', 2: '😴 Low', 3: '😐 Okay', 4: '⚡ Good', 5: '🔥 Peak' }
 
-export default function WhatNext() {
+export default function WhatNext({ taskRevision = 0 }) {
   const [task, setTask] = useState(null)
   const [reason, setReason] = useState('')
   const [energy, setEnergy] = useState(3)
@@ -41,7 +41,7 @@ export default function WhatNext() {
     }
   }, [energy])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [taskRevision])
 
   async function changeEnergy(e) {
     setEnergy(e)
