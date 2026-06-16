@@ -15,6 +15,7 @@ interface UserContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -63,8 +64,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { data } = await authApi.login(email, password);
+  async function persistSession(data: any, fallbackEmail?: string) {
     await SecureStore.setItemAsync('accessToken', data.token || data.accessToken);
     if (data.refreshToken) {
       await SecureStore.setItemAsync('refreshToken', data.refreshToken);
@@ -72,25 +72,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const userData: User = {
       id: data.user?.id || data.userId || '',
       name: data.user?.name || data.name || '',
-      email: data.user?.email || email,
+      email: data.user?.email || fallbackEmail || '',
     };
     await SecureStore.setItemAsync('user', JSON.stringify(userData));
     setUser(userData);
+  }
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { data } = await authApi.login(email, password);
+    await persistSession(data, email);
   }, []);
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await authApi.signup(name, email, password);
-    await SecureStore.setItemAsync('accessToken', data.token || data.accessToken);
-    if (data.refreshToken) {
-      await SecureStore.setItemAsync('refreshToken', data.refreshToken);
-    }
-    const userData: User = {
-      id: data.user?.id || data.userId || '',
-      name: data.user?.name || name,
-      email: data.user?.email || email,
-    };
-    await SecureStore.setItemAsync('user', JSON.stringify(userData));
-    setUser(userData);
+    await persistSession(data, email);
+  }, []);
+
+  const googleLogin = useCallback(async (idToken: string) => {
+    const { data } = await authApi.googleAuth(idToken);
+    await persistSession(data);
   }, []);
 
   const logout = useCallback(async () => {
@@ -101,7 +101,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <UserContext.Provider value={{ user, isLoading, login, signup, googleLogin, logout }}>
       {children}
     </UserContext.Provider>
   );
