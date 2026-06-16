@@ -29,7 +29,7 @@ async function chunkTask(text) {
 
   try {
     const prompt = `
-You are an ADHD productivity assistant.
+You are an ADHD productivity coach.
 
 Break this task into small actionable steps.
 
@@ -75,7 +75,7 @@ async function parseBrainDump(text) {
 
   try {
     const prompt = `
-You are an ADHD productivity assistant helping a user turn a messy brain dump into clear tasks.
+You are an ADHD productivity coach helping a user turn a messy brain dump into clear tasks.
 
 Convert the user's text into a JSON array of actionable tasks.
 
