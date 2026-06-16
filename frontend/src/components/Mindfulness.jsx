@@ -255,17 +255,17 @@ import React, { useEffect, useRef, useState } from "react";
 import Affirmations from "./Affirmations";
 
 const MODES = {
-  meditation: { 
-    label: "Meditation", 
-    audioSrc: "../public/audio/04_Meditation_for_Working_with_Difficulties.mp3"
+  meditation: {
+    label: "Meditation",
+    audioSrc: "/audio/04_Meditation_for_Working_with_Difficulties.mp3"
   },
-  grounding: { 
-    label: "Grounding", 
-    audioSrc: "../public/audio/Body-Scan-Meditation.mp3"
+  grounding: {
+    label: "Grounding",
+    audioSrc: "/audio/Body-Scan-Meditation.mp3"
   },
-  guided: { 
-    label: "Sleep meditation", 
-    audioSrc: "../public/audio/Body-Scan-for-Sleep.mp3"
+  guided: {
+    label: "Sleep meditation",
+    audioSrc: "/audio/Body-Scan-for-Sleep.mp3"
   }
 
 };
