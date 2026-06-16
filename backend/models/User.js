@@ -10,7 +10,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format'],
   },
-  passwordHash: String,
+  passwordHash: { type: String, default: null },
+  authProviders: {
+    type: [{ type: String, enum: ['EMAIL_PASSWORD', 'GOOGLE'] }],
+    default: [],
+  },
+  googleId: { type: String, default: null },
 
   createdAt: { type: Date, default: Date.now }
 });

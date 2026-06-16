@@ -14,22 +14,62 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 
 import { useUser } from '../../contexts/UserContext';
 import { colors, spacing, radius, typography } from '../../theme/colors';
 import { AuthStackParams } from '../../navigation/AppNavigator';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParams, 'Signup'>;
 };
 
 export default function SignupScreen({ navigation }: Props) {
-  const { signup } = useUser();
+  const { signup, googleLogin } = useUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  });
+
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      handleGoogleSignup(id_token);
+    }
+  }, [response]);
+
+  const handleGoogleSignup = async (idToken: string) => {
+    setGoogleLoading(true);
+    try {
+      await googleLogin(idToken);
+    } catch (err: any) {
+      const code = err.response?.data?.code;
+      const msg = err.response?.data?.error || 'Google sign-up failed. Please try again.';
+      if (code === 'EMAIL_ACCOUNT_EXISTS') {
+        Alert.alert(
+          'Account Already Exists',
+          'An account with this email already exists. Please sign in using your email and password.',
+          [
+            { text: 'Go to Sign In', onPress: () => navigation.navigate('Login') },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      } else {
+        Alert.alert('Google Sign-Up Failed', msg);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSignup = async () => {
     if (!name.trim() || !email.trim() || !password.trim()) {
@@ -46,7 +86,7 @@ export default function SignupScreen({ navigation }: Props) {
     } catch (err: any) {
       Alert.alert(
         'Signup Failed',
-        err.response?.data?.message || 'Could not create account. Please try again.'
+        err.response?.data?.error || err.response?.data?.message || 'Could not create account. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -70,6 +110,28 @@ export default function SignupScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.card}>
+            {/* Google Sign-Up */}
+            <TouchableOpacity
+              style={[styles.googleBtn, (googleLoading || !request) && styles.btnDisabled]}
+              onPress={() => promptAsync()}
+              disabled={googleLoading || !request}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color={colors.textPrimary} />
+              ) : (
+                <>
+                  <Text style={styles.googleIcon}>G</Text>
+                  <Text style={styles.googleBtnText}>Sign up with Google</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Name</Text>
               <View style={styles.inputWrap}>
@@ -171,6 +233,36 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
+
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    height: 50,
+  },
+  googleIcon: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4285F4',
+  },
+  googleBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { ...typography.bodySmall, color: colors.textMuted },
 
   inputGroup: { gap: spacing.xs },
   label: { ...typography.label },

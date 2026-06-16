@@ -46,6 +46,8 @@ export const authApi = {
     apiClient.post('/auth/login', { email, password }),
   signup: (name: string, email: string, password: string) =>
     apiClient.post('/auth/signup', { name, email, password }),
+  googleAuth: (idToken: string) =>
+    apiClient.post('/auth/google', { idToken }),
   refresh: (token: string) =>
     apiClient.post('/auth/refresh', { token }),
 };
