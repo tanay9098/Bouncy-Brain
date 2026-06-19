@@ -2,7 +2,6 @@
 
 A full-stack productivity application designed for people with ADHD/ADD. Bouncy Brain helps neurodivergent users manage tasks, run focus sessions, build habits, and get AI-powered guidance — all through interfaces optimized for how their brains actually work.
 
-For the Android version, visit the [Bouncy Brain Android repository](https://github.com/tanay9098/Bouncy-Brain-Android).
 
 ---
 
