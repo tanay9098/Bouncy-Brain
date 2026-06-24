@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 import { colors, spacing, radius, typography } from '../theme/colors';
 import CalendarScreen from './CalendarScreen';
@@ -58,6 +62,35 @@ const CONNECTORS = [
 
 export default function MoreScreen() {
   const [active, setActive] = useState<SubScreen>('menu');
+  const [connectorStatus, setConnectorStatus] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        const res = await axios.get(`${API_URL}/integrations/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const s = res.data;
+        setConnectorStatus({
+          gmail: !!s?.gmail?.connected,
+          gcal:  !!s?.gcal?.connected,
+          slack: !!s?.slack?.connected,
+        });
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  async function openConnector(item: typeof CONNECTORS[0]) {
+    const url = await getConnectorUrl(item.urlEndpoint);
+    if (!url) {
+      Alert.alert('Error', 'Could not start connection. Please try again.');
+      return;
+    }
+    Linking.openURL(url);
+  }
 
   if (active === 'calendar') {
     return <CalendarScreen onBack={() => setActive('menu')} />;

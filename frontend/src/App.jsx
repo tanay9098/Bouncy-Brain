@@ -8,6 +8,7 @@ import TodoList from "./components/TodoList";
 import Mindfulness from "./components/Mindfulness";
 import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
+import ConnectorsPage from "./components/ConnectorsPage";
 import FocusOverlay from "./components/FocusOverlay";
 import { useUser } from "./contexts/UserContext";
 import { EnergyProvider, useEnergy } from "./contexts/EnergyContext";
@@ -242,6 +243,7 @@ export default function App() {
             <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
             <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+            <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
           </Routes>
         </main>
       </div>

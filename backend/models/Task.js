@@ -11,6 +11,10 @@ const taskSchema = new mongoose.Schema({
   importance: { type: Number, default: 1 },
   dreadScore: { type: Number, default: 3, min: 1, max: 5 },
   aiPriority: { type: String, enum: ['High', 'Medium', 'Low', null], default: null },
+  meta: {
+    source:   { type: String, default: null },
+    sourceId: { type: String, default: null },
+  },
   createdAt: { type: Date, default: Date.now }
 });
 
