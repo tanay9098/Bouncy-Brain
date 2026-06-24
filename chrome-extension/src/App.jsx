@@ -7,6 +7,7 @@ import QuickTaskAdd from './components/QuickTaskAdd.jsx'
 import QuickBrainDump from './components/QuickBrainDump.jsx'
 import QuickTimer from './components/QuickTimer.jsx'
 import NavBar from './components/NavBar.jsx'
+import Connectors from './components/Connectors.jsx'
 
 export default function App() {
   const [authed, setAuthed] = useState(false)
@@ -85,10 +86,11 @@ export default function App() {
       </header>
 
       <div className="popup-content">
-        {tab === 'next'  && <WhatNext taskRevision={taskRevision} />}
-        {tab === 'add'   && <QuickTaskAdd onAdded={() => setTab('next')} />}
-        {tab === 'dump'  && <QuickBrainDump />}
-        {tab === 'timer' && <QuickTimer />}
+        {tab === 'next'    && <WhatNext taskRevision={taskRevision} />}
+        {tab === 'add'     && <QuickTaskAdd onAdded={() => setTab('next')} />}
+        {tab === 'dump'    && <QuickBrainDump />}
+        {tab === 'timer'   && <QuickTimer />}
+        {tab === 'connect' && <Connectors />}
       </div>
 
       <NavBar active={tab} onChange={setTab} />

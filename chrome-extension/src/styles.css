@@ -95,6 +95,11 @@ html, body, #root {
 .ring-time { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
 .ring-phase { font-size: 12px; color: var(--muted); }
 .timer-controls { display: flex; gap: 8px; justify-content: center; }
+
+/* Connectors */
+.connector-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.connector-icon-ext { width: 34px; height: 34px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.soon-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); background: var(--border); border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
 .session-stat { text-align: center; font-size: 12px; color: var(--muted); }
 .session-count { font-size: 24px; font-weight: 700; color: var(--violet-light); }
 

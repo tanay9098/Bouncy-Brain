@@ -168,6 +168,69 @@ body {
 
 .nav-divider { height: 1px; background: var(--border); margin: 8px 0; }
 
+/* Connectors section */
+.connectors-section {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connectors-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--muted);
+  padding: 0 6px 6px;
+}
+
+.connector-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.connector-item:hover { background: var(--violet-dim); }
+
+.connector-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.connector-icon svg { width: 14px; height: 14px; }
+
+.connector-name { flex: 1; font-size: 13px; }
+
+.connector-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  background: var(--border);
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
 .sidebar-footer {
   margin-top: auto;
   display: flex;
