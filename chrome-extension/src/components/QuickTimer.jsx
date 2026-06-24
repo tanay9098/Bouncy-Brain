@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 
 const MODES = [
-  { id: 'pomodoro',  label: 'Pomodoro',  work: 25, brk: 5 },
-  { id: 'deep',      label: 'Deep Work', work: 50, brk: 10 },
+  { id: 'pomodoro', label: 'Pomodoro',     work: 25, brk: 5 },
+  { id: 'custom',   label: 'Custom Timer', work: 45, brk: 10 },
 ]
 
 const CIRCUMFERENCE = 2 * Math.PI * 50
@@ -21,6 +21,8 @@ export default function QuickTimer() {
   const [modeIdx, setModeIdx] = useState(0)
   const [state, setState] = useState(null)
   const [remaining, setRemaining] = useState(25 * 60)
+  const [customWork, setCustomWork] = useState(45)
+  const [customBreak, setCustomBreak] = useState(10)
   const tickRef = useRef(null)
 
   async function syncState() {
@@ -49,10 +51,12 @@ export default function QuickTimer() {
 
   async function start() {
     const mode = MODES[modeIdx]
+    const workMinsVal = mode.id === 'custom' ? customWork : mode.work
+    const breakMinsVal = mode.id === 'custom' ? customBreak : mode.brk
     await msg('START_TIMER', {
       mode: mode.id,
-      workMins: mode.work,
-      breakMins: mode.brk,
+      workMins: workMinsVal,
+      breakMins: breakMinsVal,
       isWork: true,
       sessionCount: state?.sessionCount || 0,
       distractionCount: 0,
@@ -95,6 +99,31 @@ export default function QuickTimer() {
               {m.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {!state?.active && modeIdx === 1 && (
+        <div className="custom-inputs">
+          <div className="custom-input-group">
+            <label className="custom-label">Work (min)</label>
+            <input
+              className="custom-input"
+              type="number"
+              value={customWork}
+              min={1} max={120}
+              onChange={(e) => setCustomWork(Math.max(1, Number(e.target.value)))}
+            />
+          </div>
+          <div className="custom-input-group">
+            <label className="custom-label">Break (min)</label>
+            <input
+              className="custom-input"
+              type="number"
+              value={customBreak}
+              min={1} max={60}
+              onChange={(e) => setCustomBreak(Math.max(1, Number(e.target.value)))}
+            />
+          </div>
         </div>
       )}
 

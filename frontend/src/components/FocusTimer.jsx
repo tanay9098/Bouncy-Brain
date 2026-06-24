@@ -7,8 +7,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 90; // r = 90
 
 const MODES = [
   { id: "pomodoro", label: "Pomodoro", work: 25, brk: 5 },
-  { id: "deep",     label: "Deep Work", work: 50, brk: 10 },
-  
+  { id: "custom",   label: "Custom Timer", work: 45, brk: 10 },
 ];
 
 export default function FocusTimer() {
@@ -129,7 +128,7 @@ export default function FocusTimer() {
       {reward && <div className="reward-burst">{reward}</div>}
 
       <h1 className="page-title">Focus Timer</h1>
-      <p className="page-subtitle">Pomodoro-style sessions with tab-switch protection</p>
+      <p className="page-subtitle">Focus sessions with tab-switch protection</p>
 
       <div className="grid-main">
         {/* ── Timer card ───────────────────────────────────── */}
@@ -146,7 +145,7 @@ export default function FocusTimer() {
             ))}
           </div>
 
-          {modeIdx === 2 && (
+          {modeIdx === 1 && (
             <div className="flex gap-3 mb-4">
               <div style={{ flex: 1 }}>
                 <div className="text-xs text-muted mb-1">Work (min)</div>
