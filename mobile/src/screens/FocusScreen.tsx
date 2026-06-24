@@ -28,7 +28,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const PRESETS = [
   { label: 'Pomodoro', work: 25, brk: 5 },
   { label: 'Short', work: 15, brk: 3 },
-  { label: 'Deep Work', work: 50, brk: 10 },
+  { label: 'Custom', work: null, brk: null },
 ];
 
 function pad(n: number) {
@@ -51,6 +51,7 @@ export default function FocusScreen() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showSubjectInput, setShowSubjectInput] = useState(false);
+  const [customSelected, setCustomSelected] = useState(false);
   const [subjectDraft, setSubjectDraft] = useState(subject);
   const prevPhaseRef = useRef(phase);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
@@ -150,30 +151,66 @@ export default function FocusScreen() {
 
         {/* Presets */}
         <View style={styles.presetRow}>
-          {PRESETS.map((p) => (
-            <TouchableOpacity
-              key={p.label}
-              style={[
-                styles.presetBtn,
-                workDuration === p.work && breakDuration === p.brk && styles.presetActive,
-              ]}
-              onPress={() => {
-                actions.setWorkDuration(p.work);
-                actions.setBreakDuration(p.brk);
-              }}
-            >
-              <Text
-                style={[
-                  styles.presetText,
-                  workDuration === p.work && breakDuration === p.brk && styles.presetTextActive,
-                ]}
+          {PRESETS.map((p) => {
+            const isCustom = p.work === null;
+            const isActive = isCustom
+              ? customSelected
+              : !customSelected && workDuration === p.work && breakDuration === p.brk;
+            return (
+              <TouchableOpacity
+                key={p.label}
+                style={[styles.presetBtn, isActive && styles.presetActive]}
+                onPress={() => {
+                  if (isCustom) {
+                    setCustomSelected(true);
+                  } else {
+                    setCustomSelected(false);
+                    actions.setWorkDuration(p.work!);
+                    actions.setBreakDuration(p.brk!);
+                  }
+                }}
               >
-                {p.label}
-              </Text>
-              <Text style={styles.presetSub}>{p.work}/{p.brk}m</Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={[styles.presetText, isActive && styles.presetTextActive]}>
+                  {p.label}
+                </Text>
+                {!isCustom && <Text style={styles.presetSub}>{p.work}/{p.brk}m</Text>}
+                {isCustom && <Text style={styles.presetSub}>set yours</Text>}
+              </TouchableOpacity>
+            );
+          })}
         </View>
+
+        {/* Custom Timer duration inputs */}
+        {customSelected && (
+          <View style={styles.customRow}>
+            <View style={styles.customField}>
+              <Text style={styles.customLabel}>Work (min)</Text>
+              <TextInput
+                style={styles.customInput}
+                keyboardType="number-pad"
+                value={String(workDuration)}
+                onChangeText={(v) => {
+                  const n = Math.max(1, parseInt(v) || 1);
+                  actions.setWorkDuration(n);
+                }}
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+            <View style={styles.customField}>
+              <Text style={styles.customLabel}>Break (min)</Text>
+              <TextInput
+                style={styles.customInput}
+                keyboardType="number-pad"
+                value={String(breakDuration)}
+                onChangeText={(v) => {
+                  const n = Math.max(1, parseInt(v) || 1);
+                  actions.setBreakDuration(n);
+                }}
+                placeholderTextColor={colors.textMuted}
+              />
+            </View>
+          </View>
+        )}
 
         {/* Circular Timer */}
         <View style={[
@@ -377,6 +414,16 @@ const styles = StyleSheet.create({
   presetText: { ...typography.label, color: colors.textSecondary },
   presetTextActive: { color: colors.violetLight },
   presetSub: { ...typography.caption },
+
+  customRow: { flexDirection: 'row', gap: spacing.md, alignSelf: 'stretch' },
+  customField: { flex: 1, gap: spacing.xs },
+  customLabel: { ...typography.caption, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  customInput: {
+    backgroundColor: colors.surface, borderRadius: radius.md,
+    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    color: colors.textPrimary, fontSize: 16, fontWeight: '600', textAlign: 'center',
+  },
 
   timerWrap: {
     position: 'relative', width: CIRCLE_SIZE, height: CIRCLE_SIZE,
