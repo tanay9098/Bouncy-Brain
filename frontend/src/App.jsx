@@ -148,16 +148,13 @@ function Sidebar({ theme, setTheme, onLogout }) {
       <div className="connectors-section">
         <div className="connectors-label">Connectors</div>
         {CONNECTORS.map(({ id, label, color, icon: Icon }) => (
-          <Link
-            key={id}
-            to="/connectors"
-            className={`connector-item ${location.pathname === "/connectors" ? "active" : ""}`}
-          >
+          <button key={id} className="connector-item" title={`${label} — coming soon`}>
             <span className="connector-icon" style={{ color, background: color + "20" }}>
               <Icon />
             </span>
             <span className="connector-name">{label}</span>
-          </Link>
+            <span className="connector-badge">Soon</span>
+          </button>
         ))}
       </div>
 
