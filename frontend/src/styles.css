@@ -86,6 +86,14 @@ body {
   overflow: hidden;
 }
 
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
 /* ── Sidebar ────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
@@ -310,23 +318,147 @@ body {
 }
 .logout-btn:hover { border-color: var(--red); color: var(--red); }
 
+/* ── Mobile Header ───────────────────────────────────── */
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.mobile-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.mobile-menu-btn,
+.mobile-theme-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.mobile-menu-btn:hover,
+.mobile-theme-btn:hover {
+  border-color: var(--border-active);
+  color: var(--text);
+}
+
+.mobile-theme-btn svg { width: 18px; height: 18px; }
+
+/* ── Sidebar Backdrop ────────────────────────────────── */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+
 /* ── Main Content ────────────────────────────────────── */
 .main-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 28px 32px;
   min-width: 0;
+  min-height: 0;
 }
 
+/* ── Responsive Breakpoints ──────────────────────────── */
+
+/* Tablet and below (≤1024px) */
+@media (max-width: 1024px) {
+  .main-content { padding: 20px 24px; }
+}
+
+/* Mobile/small tablet (≤768px) */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
     z-index: 100;
     transform: translateX(-100%);
-    transition: transform 0.25s;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   }
   .sidebar.open { transform: translateX(0); }
+
+  .sidebar-backdrop { display: block; }
+
+  .mobile-header { display: flex; }
+
   .main-content { padding: 16px; }
+
+  .page-title { font-size: 20px; }
+  .page-subtitle { margin-bottom: 16px; }
+
+  .connectors-page { padding: 0; }
+
+  .ring-container { width: 180px; height: 180px; }
+  .ring-svg { width: 180px; height: 180px; }
+  .ring-time { font-size: 32px; }
+
+  .focus-overlay-card { padding: 24px 20px; }
+
+  .connector-card { flex-wrap: wrap; gap: 12px; }
+  .connector-card-actions { flex-direction: row; align-items: center; width: 100%; }
+
+  .stat-value { font-size: 28px; }
+
+  .audio-time { font-size: 34px; }
+
+  .task-actions { padding-left: 0; }
+  .task-meta { padding-left: 0; }
+  .subtask-list { padding-left: 0; }
+}
+
+/* Small phone (≤480px) */
+@media (max-width: 480px) {
+  .main-content { padding: 12px; }
+
+  .card { padding: 14px; }
+  .card-sm { padding: 10px; }
+
+  .page-title { font-size: 18px; }
+
+  .ring-container { width: 160px; height: 160px; }
+  .ring-svg { width: 160px; height: 160px; }
+  .ring-time { font-size: 28px; }
+
+  .btn { font-size: 13px; padding: 8px 12px; }
+  .btn-lg { font-size: 14px; padding: 10px 18px; }
+
+  .energy-btn { width: 38px; height: 38px; font-size: 16px; }
+
+  .stat-tile { padding: 12px 14px; }
+  .stat-value { font-size: 24px; }
+
+  .what-next-task { font-size: 16px; }
+
+  .audio-time { font-size: 28px; }
+  .audio-player { padding: 20px 16px; }
+
+  .connectors-toast { top: 12px; right: 12px; left: 12px; right: auto; width: calc(100% - 24px); }
 }
 
 /* ── Page structure ─────────────────────────────────── */
@@ -389,8 +521,18 @@ body {
   gap: 20px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1024px) {
+  .grid-main { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4, .grid-main { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 480px) and (max-width: 768px) {
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Buttons ────────────────────────────────────────── */

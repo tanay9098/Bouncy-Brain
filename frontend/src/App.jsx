@@ -119,13 +119,15 @@ const CONNECTORS = [
   },
 ];
 
-function Sidebar({ theme, setTheme, onLogout }) {
+function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   const location = useLocation();
   const { energy, setEnergy } = useEnergy();
   const ENERGY_EMOJIS = ["💀", "😔", "😐", "⚡", "🔥"];
 
   return (
-    <nav className="sidebar">
+    <>
+      {open && <div className="sidebar-backdrop" onClick={onClose} />}
+      <nav className={`sidebar${open ? " open" : ""}`}>
       <div className="sidebar-brand">
         <div className="sidebar-logo">BB</div>
         <div>
@@ -139,6 +141,7 @@ function Sidebar({ theme, setTheme, onLogout }) {
           key={to}
           to={to}
           className={`nav-item ${location.pathname === to ? "active" : ""}`}
+          onClick={onClose}
         >
           <Icon />
           {label}
@@ -191,6 +194,7 @@ function Sidebar({ theme, setTheme, onLogout }) {
         </button>
       </div>
     </nav>
+    </>
   );
 }
 
@@ -201,11 +205,22 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
 export default function App() {
   const { user, setUser, setToken } = useUser();
   const [theme, setTheme] = useState(
     () => localStorage.getItem("bb-theme") || "dark"
   );
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -221,6 +236,7 @@ export default function App() {
   function logout() {
     setUser(null);
     setToken(null);
+    setSidebarOpen(false);
   }
 
   return (
@@ -228,24 +244,55 @@ export default function App() {
       <div className="app-shell">
         {user && (
           <>
-            <Sidebar theme={theme} setTheme={setTheme} onLogout={logout} />
+            <Sidebar
+              theme={theme}
+              setTheme={setTheme}
+              onLogout={logout}
+              open={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+            />
             <FocusOverlay />
           </>
         )}
 
-        <main className="main-content">
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/focus" element={<ProtectedRoute><FocusTimer /></ProtectedRoute>} />
-            <Route path="/todo" element={<ProtectedRoute><TodoList /></ProtectedRoute>} />
-            <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
-            <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-            <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
-          </Routes>
-        </main>
+        <div className="main-wrapper">
+          {user && (
+            <header className="mobile-header">
+              <button
+                className="mobile-menu-btn"
+                onClick={() => setSidebarOpen((o) => !o)}
+                aria-label="Open menu"
+              >
+                <HamburgerIcon />
+              </button>
+              <div className="mobile-header-brand">
+                <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }}>BB</div>
+                <span className="sidebar-title">Bouncy Brain</span>
+              </div>
+              <button
+                className="mobile-theme-btn"
+                onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+              </button>
+            </header>
+          )}
+
+          <main className="main-content">
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/focus" element={<ProtectedRoute><FocusTimer /></ProtectedRoute>} />
+              <Route path="/todo" element={<ProtectedRoute><TodoList /></ProtectedRoute>} />
+              <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
+              <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+              <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </EnergyProvider>
   );
