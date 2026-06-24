@@ -8,6 +8,7 @@ import TodoList from "./components/TodoList";
 import Mindfulness from "./components/Mindfulness";
 import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
+import ConnectorsPage from "./components/ConnectorsPage";
 import FocusOverlay from "./components/FocusOverlay";
 import { useUser } from "./contexts/UserContext";
 import { EnergyProvider, useEnergy } from "./contexts/EnergyContext";
@@ -147,13 +148,16 @@ function Sidebar({ theme, setTheme, onLogout }) {
       <div className="connectors-section">
         <div className="connectors-label">Connectors</div>
         {CONNECTORS.map(({ id, label, color, icon: Icon }) => (
-          <button key={id} className="connector-item" title={`${label} — coming soon`}>
+          <Link
+            key={id}
+            to="/connectors"
+            className={`connector-item ${location.pathname === "/connectors" ? "active" : ""}`}
+          >
             <span className="connector-icon" style={{ color, background: color + "20" }}>
               <Icon />
             </span>
             <span className="connector-name">{label}</span>
-            <span className="connector-badge">Soon</span>
-          </button>
+          </Link>
         ))}
       </div>
 
@@ -242,6 +246,7 @@ export default function App() {
             <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
             <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+            <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
           </Routes>
         </main>
       </div>

@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 import { colors, spacing, radius, typography } from '../theme/colors';
 import CalendarScreen from './CalendarScreen';
@@ -39,6 +43,7 @@ const CONNECTORS = [
     label: 'Gmail',
     description: 'Sync emails as tasks',
     color: '#ea4335',
+    urlEndpoint: '/integrations/google/url',
   },
   {
     id: 'slack',
@@ -46,6 +51,7 @@ const CONNECTORS = [
     label: 'Slack',
     description: 'Turn messages into tasks',
     color: '#611f69',
+    urlEndpoint: '/integrations/slack/url',
   },
   {
     id: 'gcal',
@@ -53,11 +59,55 @@ const CONNECTORS = [
     label: 'Google Calendar',
     description: 'Sync events with deadlines',
     color: '#1a73e8',
+    urlEndpoint: '/integrations/google/url',
   },
 ];
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+async function getConnectorUrl(endpoint: string): Promise<string | null> {
+  try {
+    const token = await AsyncStorage.getItem('accessToken');
+    const res = await axios.get(`${API_URL}${endpoint}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.data?.url || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function MoreScreen() {
   const [active, setActive] = useState<SubScreen>('menu');
+  const [connectorStatus, setConnectorStatus] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await AsyncStorage.getItem('accessToken');
+        const res = await axios.get(`${API_URL}/integrations/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const s = res.data;
+        setConnectorStatus({
+          gmail: !!s?.gmail?.connected,
+          gcal:  !!s?.gcal?.connected,
+          slack: !!s?.slack?.connected,
+        });
+      } catch {
+        // ignore
+      }
+    })();
+  }, []);
+
+  async function openConnector(item: typeof CONNECTORS[0]) {
+    const url = await getConnectorUrl(item.urlEndpoint);
+    if (!url) {
+      Alert.alert('Error', 'Could not start connection. Please try again.');
+      return;
+    }
+    Linking.openURL(url);
+  }
 
   if (active === 'calendar') {
     return <CalendarScreen onBack={() => setActive('menu')} />;
@@ -90,24 +140,34 @@ export default function MoreScreen() {
 
         <Text style={styles.sectionLabel}>Connectors</Text>
 
-        {CONNECTORS.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.menuItem}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
-              <Ionicons name={item.icon as any} size={26} color={item.color} />
-            </View>
-            <View style={styles.menuText}>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <Text style={styles.menuDesc}>{item.description}</Text>
-            </View>
-            <View style={styles.soonBadge}>
-              <Text style={styles.soonText}>Soon</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+        {CONNECTORS.map((item) => {
+          const isConnected = !!connectorStatus[item.id];
+          return (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => openConnector(item)}
+            >
+              <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
+                <Ionicons name={item.icon as any} size={26} color={item.color} />
+              </View>
+              <View style={styles.menuText}>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={styles.menuDesc}>{item.description}</Text>
+              </View>
+              {isConnected ? (
+                <View style={[styles.soonBadge, styles.connectedBadge]}>
+                  <Text style={[styles.soonText, styles.connectedText]}>Connected</Text>
+                </View>
+              ) : (
+                <View style={styles.soonBadge}>
+                  <Text style={styles.soonText}>Connect</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -159,5 +219,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     color: colors.textMuted,
+  },
+  connectedBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  connectedText: {
+    color: colors.green,
   },
 });
