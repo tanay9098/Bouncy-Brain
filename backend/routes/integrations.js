@@ -47,7 +47,7 @@ function googleAuthUrl(state) {
 function slackAuthUrl(state) {
   const params = new URLSearchParams({
     client_id:    process.env.SLACK_CLIENT_ID,
-    scope:        'channels:history,channels:read,stars:read,users:read',
+    user_scope:   'channels:history,channels:read,stars:read,users:read',
     redirect_uri: `${process.env.BACKEND_URL}/api/integrations/slack/callback`,
     state,
   });
