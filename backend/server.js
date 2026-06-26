@@ -18,8 +18,10 @@ const priorityRoutes = require('./routes/priority');
 const recommendationsRoutes = require('./routes/recommendations');
 const habitsRoutes = require('./routes/habits');
 const aiRoutes = require('./routes/ai');
+const integrationsRoutes = require('./routes/integrations');
 
 const deadlineChecker = require('./jobs/deadlineChecker');
+const integrationSync  = require('./jobs/integrationSync');
 
 
 const app = express();
@@ -99,6 +101,7 @@ app.use('/api/priority', priorityRoutes);
 app.use('/api/recommendations', recommendationsRoutes);
 app.use('/api/habits', habitsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
@@ -113,6 +116,16 @@ if (!process.env.VERCEL) {
       await deadlineChecker();
     } catch(err) {
       console.error('[cron] checker error', err);
+    }
+  });
+
+  // Sync integrations every 30 minutes
+  cron.schedule('*/30 * * * *', async () => {
+    try {
+      console.log('[cron] running integration sync');
+      await integrationSync();
+    } catch(err) {
+      console.error('[cron] integration sync error', err);
     }
   });
 
