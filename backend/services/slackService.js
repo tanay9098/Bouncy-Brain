@@ -16,10 +16,10 @@ async function exchangeCode(code, redirectUri) {
   });
   if (!res.data.ok) throw new Error(res.data.error || 'Slack OAuth failed');
   return {
-    accessToken: res.data.access_token,
+    accessToken: res.data.authed_user?.access_token || res.data.access_token,
     teamId:      res.data.team?.id,
     teamName:    res.data.team?.name,
-    botToken:    res.data.access_token,
+    
   };
 }
 
