@@ -8,6 +8,7 @@ import TodoList from "./components/TodoList";
 import Mindfulness from "./components/Mindfulness";
 import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
+import ConnectorsPage from "./components/ConnectorsPage";
 import FocusOverlay from "./components/FocusOverlay";
 import { useUser } from "./contexts/UserContext";
 import { EnergyProvider, useEnergy } from "./contexts/EnergyContext";
@@ -85,65 +86,119 @@ const NAV_ITEMS = [
   { to: "/calendar",  label: "Calendar",    icon: Icons.Calendar },
 ];
 
-function Sidebar({ theme, setTheme, onLogout }) {
+const CONNECTORS = [
+  {
+    id: "gmail",
+    label: "Gmail",
+    color: "#ea4335",
+    icon: () => (
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z" />
+      </svg>
+    ),
+  },
+  {
+    id: "slack",
+    label: "Slack",
+    color: "#4a154b",
+    icon: () => (
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.528 2.528 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 012.521-2.52 2.527 2.527 0 012.521 2.52v6.313A2.528 2.528 0 018.834 24a2.528 2.528 0 01-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 01-2.521-2.52A2.528 2.528 0 018.834 0a2.528 2.528 0 012.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 012.521 2.521 2.528 2.528 0 01-2.521 2.521H2.522A2.528 2.528 0 010 8.834a2.528 2.528 0 012.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 012.522-2.521A2.528 2.528 0 0124 8.834a2.528 2.528 0 01-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 01-2.523 2.521 2.527 2.527 0 01-2.52-2.521V2.522A2.527 2.527 0 0115.165 0a2.528 2.528 0 012.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 012.523 2.522A2.528 2.528 0 0115.165 24a2.527 2.527 0 01-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 01-2.52-2.523 2.526 2.526 0 012.52-2.52h6.313A2.527 2.527 0 0124 15.165a2.528 2.528 0 01-2.522 2.523h-6.313z" />
+      </svg>
+    ),
+  },
+  {
+    id: "gcal",
+    label: "Google Calendar",
+    color: "#1a73e8",
+    icon: () => (
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
+      </svg>
+    ),
+  },
+];
+
+function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   const location = useLocation();
   const { energy, setEnergy } = useEnergy();
   const ENERGY_EMOJIS = ["💀", "😔", "😐", "⚡", "🔥"];
 
   return (
-    <nav className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-logo">BB</div>
-        <div>
-          <div className="sidebar-title">Bouncy Brain</div>
-          <div className="sidebar-subtitle">ADHD Buddy</div>
-        </div>
-      </div>
-
-      {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-        <Link
-          key={to}
-          to={to}
-          className={`nav-item ${location.pathname === to ? "active" : ""}`}
-        >
-          <Icon />
-          {label}
-        </Link>
-      ))}
-
-      <div className="sidebar-footer">
-        <div className="nav-divider" />
-
-        <div className="energy-selector">
-          <div className="energy-label">Energy level</div>
-          <div className="energy-dots">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                className={`energy-dot ${n <= energy ? "filled" : ""}`}
-                onClick={() => setEnergy(n)}
-                title={`${ENERGY_EMOJIS[n - 1]} Level ${n}`}
-              >
-                {n <= energy ? "⚡" : ""}
-              </button>
-            ))}
+    <>
+      {open && <div className="sidebar-backdrop" onClick={onClose} />}
+      <nav className={`sidebar${open ? " open" : ""}`}>
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">BB</div>
+          <div>
+            <div className="sidebar-title">Bouncy Brain</div>
+            <div className="sidebar-subtitle">ADHD Buddy</div>
           </div>
         </div>
 
-        <button
-          className="theme-toggle"
-          onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-        >
-          {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
-          {theme === "dark" ? "Light mode" : "Dark mode"}
-        </button>
+        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`nav-item ${location.pathname === to ? "active" : ""}`}
+            onClick={onClose}
+          >
+            <Icon />
+            {label}
+          </Link>
+        ))}
 
-        <button className="logout-btn" onClick={onLogout}>
-          <Icons.Logout />
-          Logout
-        </button>
-      </div>
-    </nav>
+        <div className="connectors-section">
+          <div className="connectors-label">Connectors</div>
+          {CONNECTORS.map(({ id, label, color, icon: Icon }) => (
+            <Link
+              key={id}
+              to="/connectors"
+              className={`connector-item ${location.pathname === "/connectors" ? "active" : ""}`}
+              onClick={onClose}
+            >
+              <span className="connector-icon" style={{ color, background: color + "20" }}>
+                <Icon />
+              </span>
+              <span className="connector-name">{label}</span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="sidebar-footer">
+          <div className="nav-divider" />
+
+          <div className="energy-selector">
+            <div className="energy-label">Energy level</div>
+            <div className="energy-dots">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  className={`energy-dot ${n <= energy ? "filled" : ""}`}
+                  onClick={() => setEnergy(n)}
+                  title={`${ENERGY_EMOJIS[n - 1]} Level ${n}`}
+                >
+                  {n <= energy ? "⚡" : ""}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="theme-toggle"
+            onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+          >
+            {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
+
+          <button className="logout-btn" onClick={onLogout}>
+            <Icons.Logout />
+            Logout
+          </button>
+        </div>
+      </nav>
+    </>
   );
 }
 
@@ -154,11 +209,22 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
 export default function App() {
   const { user, setUser, setToken } = useUser();
   const [theme, setTheme] = useState(
     () => localStorage.getItem("bb-theme") || "dark"
   );
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -174,6 +240,7 @@ export default function App() {
   function logout() {
     setUser(null);
     setToken(null);
+    setSidebarOpen(false);
   }
 
   return (
@@ -181,23 +248,55 @@ export default function App() {
       <div className="app-shell">
         {user && (
           <>
-            <Sidebar theme={theme} setTheme={setTheme} onLogout={logout} />
+            <Sidebar
+              theme={theme}
+              setTheme={setTheme}
+              onLogout={logout}
+              open={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
+            />
             <FocusOverlay />
           </>
         )}
 
-        <main className="main-content">
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/focus" element={<ProtectedRoute><FocusTimer /></ProtectedRoute>} />
-            <Route path="/todo" element={<ProtectedRoute><TodoList /></ProtectedRoute>} />
-            <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
-            <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-          </Routes>
-        </main>
+        <div className="main-wrapper">
+          {user && (
+            <header className="mobile-header">
+              <button
+                className="mobile-menu-btn"
+                onClick={() => setSidebarOpen((o) => !o)}
+                aria-label="Open menu"
+              >
+                <HamburgerIcon />
+              </button>
+              <div className="mobile-header-brand">
+                <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }}>BB</div>
+                <span className="sidebar-title">Bouncy Brain</span>
+              </div>
+              <button
+                className="mobile-theme-btn"
+                onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+              </button>
+            </header>
+          )}
+
+          <main className="main-content">
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/focus" element={<ProtectedRoute><FocusTimer /></ProtectedRoute>} />
+              <Route path="/todo" element={<ProtectedRoute><TodoList /></ProtectedRoute>} />
+              <Route path="/mindful" element={<ProtectedRoute><Mindfulness /></ProtectedRoute>} />
+              <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+              <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
+            </Routes>
+          </main>
+        </div>
       </div>
     </EnergyProvider>
   );
