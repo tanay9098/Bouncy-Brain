@@ -21,20 +21,34 @@ app.add_middleware(
 # In-memory per-user trained models
 user_models: Dict[str, RandomForestRegressor] = {}
 
+# Categories reflect how an ADHD brain experiences a task, not just its topic.
 CATEGORY_KEYWORDS = {
-    "creative": ["write", "design", "draw", "create", "brainstorm", "draft", "sketch", "compose", "build", "develop", "code", "program", "art", "illustrate"],
-    "administrative": ["email", "report", "form", "meeting", "call", "schedule", "book", "reply", "respond", "fill", "submit", "register", "invoice", "plan", "document"],
-    "physical": ["clean", "organize", "exercise", "move", "setup", "buy", "pick", "drop", "install", "fix", "repair", "workout", "gym"],
-    "social": ["call", "meet", "discuss", "present", "interview", "talk", "chat", "feedback", "collaborate", "pair"],
-    "learning": ["read", "study", "learn", "research", "watch", "listen", "understand", "explore", "analyze", "review", "course"],
+    # Short, low-friction tasks — great for building momentum when dysregulated
+    "quick_win": ["reply", "confirm", "check", "pay", "click", "send", "approve", "remind", "ping", "rsvp", "update", "upload", "download", "print", "sign"],
+    # Requires sustained attention — only realistic during genuine focus windows
+    "deep_focus": ["write", "code", "design", "build", "develop", "program", "draft", "create", "brainstorm", "sketch", "compose", "architect", "plan", "analyze", "debug"],
+    # Benefits from a structured environment or body-doubling to sustain attention
+    "body_double_friendly": ["read", "study", "learn", "research", "watch", "listen", "understand", "explore", "review", "course", "practice", "revise"],
+    # Multi-step bureaucratic tasks ADHD people classically avoid initiating
+    "high_initiation": ["form", "tax", "invoice", "register", "submit", "file", "report", "document", "apply", "renew", "insurance", "appointment", "book", "schedule", "fill"],
+    # Movement tasks that regulate the ADHD nervous system
+    "physical_reset": ["clean", "exercise", "walk", "gym", "organize", "move", "stretch", "tidy", "workout", "run", "setup", "install", "fix", "repair", "buy", "pick", "drop"],
+    # Tasks with another person — external accountability helps ADHD follow-through
+    "social_accountability": ["meet", "call", "discuss", "present", "interview", "talk", "chat", "feedback", "collaborate", "pair", "zoom", "standup", "sync"],
+    # Repetitive low-stimulation tasks — tedious but necessary
+    "routine": ["email", "respond", "follow", "log", "track", "enter", "copy", "sort", "label", "tag", "backup", "archive", "record"],
 }
 
+# Energy level → category preference (0–1 match score).
+# Low energy (1–2): quick wins and movement to regulate; avoid high-initiation.
+# Medium energy (3): routine and social tasks with external structure.
+# High energy (4–5): deep focus and high-initiation tasks — rare windows, use them.
 ENERGY_CATEGORY_MATCH = {
-    1: {"administrative": 1.0, "physical": 0.7, "learning": 0.5, "social": 0.3, "creative": 0.2},
-    2: {"administrative": 0.9, "physical": 0.8, "learning": 0.6, "social": 0.4, "creative": 0.3},
-    3: {"administrative": 0.6, "physical": 0.7, "learning": 0.8, "social": 0.8, "creative": 0.6},
-    4: {"administrative": 0.4, "physical": 0.6, "learning": 0.8, "social": 0.8, "creative": 0.9},
-    5: {"administrative": 0.3, "physical": 0.5, "learning": 0.7, "social": 0.7, "creative": 1.0},
+    1: {"quick_win": 1.0, "physical_reset": 0.8, "routine": 0.5, "body_double_friendly": 0.4, "social_accountability": 0.3, "deep_focus": 0.1, "high_initiation": 0.1},
+    2: {"quick_win": 0.9, "physical_reset": 0.8, "routine": 0.6, "body_double_friendly": 0.5, "social_accountability": 0.4, "deep_focus": 0.2, "high_initiation": 0.2},
+    3: {"quick_win": 0.7, "physical_reset": 0.6, "routine": 0.8, "body_double_friendly": 0.8, "social_accountability": 0.8, "deep_focus": 0.5, "high_initiation": 0.4},
+    4: {"quick_win": 0.5, "physical_reset": 0.5, "routine": 0.6, "body_double_friendly": 0.8, "social_accountability": 0.7, "deep_focus": 0.9, "high_initiation": 0.8},
+    5: {"quick_win": 0.4, "physical_reset": 0.4, "routine": 0.5, "body_double_friendly": 0.7, "social_accountability": 0.7, "deep_focus": 1.0, "high_initiation": 1.0},
 }
 
 
@@ -43,7 +57,7 @@ def get_task_category(title: str) -> str:
     for cat, keywords in CATEGORY_KEYWORDS.items():
         if any(kw in title_lower for kw in keywords):
             return cat
-    return "administrative"
+    return "high_initiation"
 
 
 def get_category_energy_match(title: str, energy: int) -> float:
@@ -83,6 +97,10 @@ def compute_heuristic_score(task: dict, ctx: dict, history: dict):
     effort = min(1.0, estimate_mins / 120.0)
     effort_bonus = (1.0 - effort) if energy <= 2 else 0.5
 
+    category = get_task_category(title)
+    # High-initiation tasks get a strong boost at peak energy — that's the only realistic window
+    high_initiation_boost = 0.15 if (category == "high_initiation" and energy >= 4) else 0.0
+
     score = (
         urgency * 0.30
         + (importance / 5.0) * 0.20
@@ -90,23 +108,27 @@ def compute_heuristic_score(task: dict, ctx: dict, history: dict):
         + dread_energy_fit * 0.15
         + effort_bonus * 0.10
         + time_fit * 0.10
+        + high_initiation_boost
     )
     score = max(0.0, min(1.0, score))
 
     if urgency > 0.7:
-        reason = "Deadline is approaching"
+        reason = "Deadline is approaching — time to act"
+    elif category == "high_initiation" and energy >= 4:
+        reason = "High-energy window — ideal time for tasks you usually avoid"
+    elif category == "quick_win" and energy <= 2:
+        reason = "Low energy right now — this quick win can help build momentum"
     elif cat_match > 0.8:
-        reason = "Great match for your current energy level"
+        reason = "This task type fits your current energy well"
     elif dread_energy_fit > 0.75:
-        reason = "Your energy suits this task's difficulty"
+        reason = "Your energy is right for how difficult this feels"
     elif importance >= 4:
-        reason = "You rated this as high importance"
+        reason = "You marked this as high importance"
     elif history.get("procrastination_rate", 0) > 0.5:
-        reason = "You tend to delay this type — good time to tackle it"
+        reason = "You tend to delay this type — tackling it now while energy is good"
     else:
-        reason = "Well-balanced priority"
+        reason = "Steady task — good to keep moving"
 
-    category = get_task_category(title)
     return score, reason, category
 
 
