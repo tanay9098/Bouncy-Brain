@@ -518,7 +518,16 @@ textarea:focus-visible {
   .top-bar-menu-btn { display: none; }
 
   .bottom-nav { display: flex; }
-  .bottom-sheet-overlay { display: block; }
+  .bottom-sheet-overlay {
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .bottom-sheet-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
   .bottom-sheet { display: block; }
 
   .main-content {
