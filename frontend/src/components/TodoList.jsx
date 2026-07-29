@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { notify } from "../utils/notify";
@@ -8,33 +8,35 @@ import { useEnergy } from "../contexts/EnergyContext";
 // ── Dread pip colours ────────────────────────────────────────────────────
 function DreadMeter({ score, onChange }) {
   return (
-    <div className="dread-meter" title={`Dread: ${score}/5`}>
+    <div className="dread-meter" title={`Dread: ${score}/5`} role="group" aria-label={`Dread score ${score} of 5`}>
       <span className="text-xs text-muted" style={{ marginRight: 4 }}>Dread</span>
       {[1, 2, 3, 4, 5].map((n) => (
         <div
           key={n}
           className={`dread-pip ${n <= score ? `active-${score}` : ""}`}
           onClick={() => onChange && onChange(n)}
+          role="button"
+          tabIndex={0}
+          aria-label={`Dread level ${n}`}
+          onKeyDown={(e) => e.key === "Enter" && onChange && onChange(n)}
         />
       ))}
     </div>
   );
 }
 
-// ── Priority badge ───────────────────────────────────────────────────────
 function PriorityBadge({ level }) {
   if (!level) return null;
   const cls = level === "High" ? "badge-high" : level === "Medium" ? "badge-medium" : "badge-low";
   return <span className={`badge ${cls}`}>{level}</span>;
 }
 
-// ── Suggestion style helpers ─────────────────────────────────────────────
 const SUGGESTION_STYLES = {
-  priority:    { borderLeft: "3px solid #7c3aed", background: "var(--violet-dim)" },
-  chunk:       { borderLeft: "3px solid #10b981", background: "var(--green-dim)" },
-  deadline:    { borderLeft: "3px solid #ef4444", background: "var(--red-dim)" },
-  "quick-win": { borderLeft: "3px solid #f59e0b", background: "var(--amber-dim)" },
-  nudge:       { borderLeft: "3px solid #3b82f6", background: "rgba(59,130,246,0.08)" },
+  priority:    { borderLeft: "3px solid var(--violet)", background: "var(--violet-dim)" },
+  chunk:       { borderLeft: "3px solid var(--green)",  background: "var(--green-dim)" },
+  deadline:    { borderLeft: "3px solid var(--red)",    background: "var(--red-dim)" },
+  "quick-win": { borderLeft: "3px solid var(--amber)",  background: "var(--amber-dim)" },
+  nudge:       { borderLeft: "3px solid var(--blue)",   background: "rgba(59,130,246,0.08)" },
 };
 
 const SUGGESTION_LABELS = {
@@ -45,20 +47,104 @@ const SUGGESTION_LABELS = {
   nudge:       "Tip",
 };
 
+// ── Simplified add-task row: one field, expand for details ───────────────
+function AddTaskRow({ onAdd }) {
+  const [title, setTitle] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const [due, setDue] = useState("");
+  const [estimate, setEstimate] = useState(30);
+  const [dreadScore, setDreadScore] = useState(3);
+  const inputRef = useRef();
+
+  async function submit() {
+    if (!title.trim()) return;
+    await onAdd({ title: title.trim(), dueAt: due || null, estimateMins: Number(estimate), dreadScore: Number(dreadScore) });
+    setTitle("");
+    setDue("");
+    setEstimate(30);
+    setDreadScore(3);
+    setExpanded(false);
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div className="card card-sm add-task-row">
+      <div className="flex gap-2">
+        <input
+          ref={inputRef}
+          className="input"
+          style={{ flex: 1 }}
+          placeholder="What do you need to do?"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+            if (e.key === "Tab" && title.trim() && !expanded) { e.preventDefault(); setExpanded(true); }
+          }}
+          aria-label="New task title"
+        />
+        {title.trim() && !expanded && (
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => setExpanded(true)}
+            aria-label="Show more options"
+            title="Add details"
+          >
+            + Details
+          </button>
+        )}
+        <button
+          className="btn btn-primary"
+          onClick={submit}
+          disabled={!title.trim()}
+          aria-label="Add task"
+        >
+          Add
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="add-task-details">
+          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label className="text-xs text-muted" style={{ display: "block", marginBottom: 4 }}>Due date</label>
+              <input
+                className="input"
+                type="datetime-local"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
+                aria-label="Due date"
+              />
+            </div>
+            <div style={{ width: 100 }}>
+              <label className="text-xs text-muted" style={{ display: "block", marginBottom: 4 }}>Minutes</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="30"
+                value={estimate}
+                onChange={(e) => setEstimate(e.target.value)}
+                min={1}
+                aria-label="Estimated minutes"
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <DreadMeter score={dreadScore} onChange={setDreadScore} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TodoList() {
   const { energy } = useEnergy();
   const [searchParams] = useSearchParams();
 
-  // Tasks
   const [tasks, setTasks] = useState([]);
   const [completing, setCompleting] = useState(null);
   const [reward, setReward] = useState(null);
-
-  // New task form
-  const [title, setTitle] = useState("");
-  const [due, setDue] = useState("");
-  const [estimate, setEstimate] = useState(30);
-  const [dreadScore, setDreadScore] = useState(3);
 
   // Edit state
   const [editingId, setEditingId] = useState(null);
@@ -70,7 +156,7 @@ export default function TodoList() {
   // Brain dump
   const [dumpText, setDumpText] = useState("");
   const [dumpLoading, setDumpLoading] = useState(false);
-  const [view, setView] = useState(searchParams.get("tab") === "dump" ? "dump" : "tasks"); // "tasks" | "dump"
+  const [view, setView] = useState(searchParams.get("tab") === "dump" ? "dump" : "tasks");
 
   // AI suggestions
   const [suggestions, setSuggestions] = useState([]);
@@ -91,7 +177,6 @@ export default function TodoList() {
     else setSuggestions([]);
   }, [tasks.length, energy]);
 
-  // ── Data ──────────────────────────────────────────────────────────────
   async function load() {
     try {
       const res = await api.get("/tasks");
@@ -109,8 +194,6 @@ export default function TodoList() {
 
       if (suggestRes.status === "fulfilled") {
         const allSuggestions = suggestRes.value.suggestions || [];
-
-        // Prepend mindfulness nudge if suggested
         if (mindRes.status === "fulfilled" && mindRes.value.suggested && mindRes.value.top) {
           const m = mindRes.value.top;
           allSuggestions.unshift({
@@ -121,7 +204,6 @@ export default function TodoList() {
             action: "mindfulness",
           });
         }
-
         const fresh = allSuggestions.filter((s) => !dismissedIds.has(s.id));
         setSuggestions(fresh);
       } else {
@@ -131,22 +213,14 @@ export default function TodoList() {
     finally { setSuggestionsLoading(false); }
   }
 
-  // ── Task CRUD ─────────────────────────────────────────────────────────
-  async function add() {
-    if (!title.trim()) return;
+  async function add({ title, dueAt, estimateMins, dreadScore }) {
     try {
-      const res = await api.post("/tasks", {
-        title: title.trim(),
-        dueAt: due || null,
-        estimateMins: Number(estimate),
-        dreadScore: Number(dreadScore),
-      });
+      const res = await api.post("/tasks", { title, dueAt, estimateMins, dreadScore });
       const task = res.task;
       if (task?.dueAt) {
         scheduleDeadline(task);
         notify("📅 Deadline set", `You'll be reminded when "${task.title}" is due.`);
       }
-      setTitle(""); setDue(""); setEstimate(30); setDreadScore(3);
       load();
     } catch { alert("Could not add task"); }
   }
@@ -193,15 +267,11 @@ export default function TodoList() {
     } catch {}
   }
 
-  // ── Brain Dump ────────────────────────────────────────────────────────
   async function submitDump() {
     if (!dumpText.trim()) return;
     setDumpLoading(true);
     try {
-      const res = await api.post("/tasks/brain-dump", {
-        text: dumpText,
-        energyLevel: energy,
-      });
+      const res = await api.post("/tasks/brain-dump", { text: dumpText, energyLevel: energy });
       const count = res.tasks?.length || 0;
       notify("🧠 Dumped!", `${count} task${count !== 1 ? "s" : ""} extracted.`);
       setDumpText("");
@@ -211,7 +281,6 @@ export default function TodoList() {
     finally { setDumpLoading(false); }
   }
 
-  // ── AI suggestion actions ─────────────────────────────────────────────
   function acceptSuggestion(s) {
     if (s.type === "quick-win" && s.taskId) {
       complete(s.taskId);
@@ -219,7 +288,6 @@ export default function TodoList() {
       window.location.href = "/mindful";
       return;
     } else if (s.action === "prioritize" && s.taskId) {
-      // Scroll task into view
       document.getElementById(`task-${s.taskId}`)?.scrollIntoView({ behavior: "smooth" });
     }
     setSuggestions((p) => p.filter((x) => x.id !== s.id));
@@ -246,7 +314,6 @@ export default function TodoList() {
     return dt.toLocaleDateString();
   }
 
-  // ── Sort: what next? (rule-based multi-factor) ────────────────────────
   function scoreTask(t) {
     const now = new Date();
     const hoursLeft = t.dueAt ? (new Date(t.dueAt) - now) / 3600000 : 168;
@@ -274,12 +341,14 @@ export default function TodoList() {
           <button
             className={`mode-tab ${view === "tasks" ? "active" : ""}`}
             onClick={() => setView("tasks")}
+            aria-pressed={view === "tasks"}
           >
             📋 Task List
           </button>
           <button
             className={`mode-tab ${view === "dump" ? "active" : ""}`}
             onClick={() => setView("dump")}
+            aria-pressed={view === "dump"}
           >
             🧠 Brain Dump
           </button>
@@ -287,10 +356,9 @@ export default function TodoList() {
       </div>
 
       <div className="grid-main">
-        {/* ── Left Panel ──────────────────────────────────── */}
+        {/* ── Left Panel ────────────────────────────────── */}
         <div className="stack">
           {view === "dump" ? (
-            /* Brain Dump */
             <div className="card">
               <div className="card-title">Brain Dump</div>
               <p className="text-sm text-muted mb-3">
@@ -303,9 +371,8 @@ export default function TodoList() {
                   placeholder="Just type whatever's in your head...&#10;&#10;e.g. Need to finish the report by Friday, call the dentist, study chapter 4 before the exam next week, also reply to Sara's email..."
                   value={dumpText}
                   onChange={(e) => setDumpText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.ctrlKey) submitDump();
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) submitDump(); }}
+                  aria-label="Brain dump text"
                 />
                 <div className="brain-dump-hint">Ctrl+Enter to submit</div>
               </div>
@@ -323,65 +390,32 @@ export default function TodoList() {
               </div>
             </div>
           ) : (
-            /* Task List view */
             <>
-              {/* Add task row */}
-              <div className="card card-sm">
-                <div className="flex gap-2 mb-2" style={{ flexWrap: "wrap" }}>
-                  <input
-                    className="input"
-                    style={{ flex: 2, minWidth: 160 }}
-                    placeholder="New task..."
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") add(); }}
-                  />
-                  <input
-                    className="input"
-                    type="datetime-local"
-                    value={due}
-                    onChange={(e) => setDue(e.target.value)}
-                    style={{ flex: 1, minWidth: 180 }}
-                  />
-                  <input
-                    className="input"
-                    type="number"
-                    placeholder="Min"
-                    value={estimate}
-                    onChange={(e) => setEstimate(e.target.value)}
-                    style={{ width: 80 }}
-                    min={1}
-                  />
-                  <button className="btn btn-primary" onClick={add}>
-                    + Add
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DreadMeter score={dreadScore} onChange={setDreadScore} />
-                  <span className="text-xs text-muted">(set dread for new task)</span>
-                </div>
-              </div>
+              {/* Simplified single-field add task */}
+              <AddTaskRow onAdd={add} />
 
-              {/* Task cards */}
+              {/* Task list */}
               <div className="stack-sm">
                 {sortedTasks.map((t, idx) => (
                   <div
                     key={t._id}
+                    id={`task-${t._id}`}
                     className={`task-card ${completing === t._id ? "completing" : ""}`}
                   >
                     {editingId === t._id ? (
-                      /* Edit mode */
                       <div className="stack-sm">
                         <input
                           className="input"
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
+                          aria-label="Edit task title"
                         />
                         <input
                           className="input"
                           type="datetime-local"
                           value={editDue}
                           onChange={(e) => setEditDue(e.target.value)}
+                          aria-label="Edit due date"
                         />
                         <input
                           className="input"
@@ -389,34 +423,28 @@ export default function TodoList() {
                           value={editEstimate}
                           onChange={(e) => setEditEstimate(e.target.value)}
                           min={1}
+                          aria-label="Edit estimated minutes"
                         />
                         <DreadMeter score={editDread} onChange={setEditDread} />
                         <div className="flex gap-2">
-                          <button className="btn btn-primary btn-sm" onClick={() => saveEdit(t._id)}>
-                            Save
-                          </button>
-                          <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>
-                            Cancel
-                          </button>
+                          <button className="btn btn-primary btn-sm" onClick={() => saveEdit(t._id)}>Save</button>
+                          <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
                         </div>
                       </div>
                     ) : (
-                      /* Display mode */
                       <>
                         <div className="task-header">
                           <button
                             className="task-check"
                             onClick={() => complete(t._id)}
                             title="Mark complete"
+                            aria-label={`Complete: ${t.title}`}
                           >
                             ✓
                           </button>
                           <div className="task-title-text">
                             {idx === 0 && (
-                              <span
-                                className="badge badge-violet"
-                                style={{ marginRight: 6, verticalAlign: "middle" }}
-                              >
+                              <span className="badge badge-violet" style={{ marginRight: 6, verticalAlign: "middle" }}>
                                 ⚡ Next
                               </span>
                             )}
@@ -427,22 +455,12 @@ export default function TodoList() {
 
                         <div className="task-meta">
                           {t.dueAt && (
-                            <span
-                              style={{
-                                color:
-                                  (new Date(t.dueAt) - new Date()) / 3600000 < 24
-                                    ? "var(--red)"
-                                    : "var(--muted)",
-                              }}
-                            >
+                            <span style={{ color: (new Date(t.dueAt) - new Date()) / 3600000 < 24 ? "var(--red)" : "var(--muted)" }}>
                               📅 {fmtDue(t.dueAt)}
                             </span>
                           )}
                           {t.estimateMins && <span>⏱ ~{t.estimateMins}m</span>}
-                          <DreadMeter
-                            score={t.dreadScore || 3}
-                            onChange={(n) => updateDread(t._id, n)}
-                          />
+                          <DreadMeter score={t.dreadScore || 3} onChange={(n) => updateDread(t._id, n)} />
                         </div>
 
                         {t.subtasks?.length > 0 && (
@@ -457,12 +475,8 @@ export default function TodoList() {
                         )}
 
                         <div className="task-actions">
-                          <button className="btn btn-success btn-sm" onClick={() => complete(t._id)}>
-                            ✓ Done
-                          </button>
-                          <button className="btn btn-secondary btn-sm" onClick={() => autoChunk(t)}>
-                            ✂ Chunk
-                          </button>
+                          <button className="btn btn-success btn-sm" onClick={() => complete(t._id)}>✓ Done</button>
+                          <button className="btn btn-secondary btn-sm" onClick={() => autoChunk(t)}>✂ Chunk</button>
                           <button
                             className="btn btn-ghost btn-sm"
                             onClick={() => {
@@ -480,16 +494,18 @@ export default function TodoList() {
                     )}
                   </div>
                 ))}
+
+                {/* Empty state with direct CTA */}
                 {tasks.length === 0 && (
-                  <div
-                    className="card"
-                    style={{ textAlign: "center", padding: 40, color: "var(--muted)" }}
-                  >
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-                    <div className="font-semibold mb-2">No tasks yet</div>
-                    <div className="text-sm">
-                      Try the Brain Dump tab — just type everything on your mind.
+                  <div className="empty-state">
+                    <div className="empty-state-icon">📭</div>
+                    <div className="empty-state-title">No tasks yet</div>
+                    <div className="empty-state-body">
+                      Try the Brain Dump — type everything on your mind and AI will turn it into tasks.
                     </div>
+                    <button className="btn btn-primary" onClick={() => setView("dump")}>
+                      🧠 Start Brain Dump
+                    </button>
                   </div>
                 )}
               </div>
@@ -497,17 +513,16 @@ export default function TodoList() {
           )}
         </div>
 
-        {/* ── Right Panel: AI Suggestions ─────────────────── */}
+        {/* ── Right Panel: AI Suggestions ──────────────── */}
         <aside className="stack">
           <div className="card">
-            <div
-              className="flex items-center justify-between mb-3"
-            >
+            <div className="flex items-center justify-between mb-3">
               <div className="card-title" style={{ margin: 0 }}>AI Suggestions</div>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={fetchSuggestions}
                 disabled={suggestionsLoading}
+                aria-label="Refresh suggestions"
               >
                 {suggestionsLoading ? "..." : "↺"}
               </button>
@@ -524,65 +539,40 @@ export default function TodoList() {
                 {suggestions.map((s) => (
                   <div
                     key={s.id}
-                    style={{
-                      borderRadius: "var(--radius-sm)",
-                      padding: "12px 14px",
-                      ...SUGGESTION_STYLES[s.type],
-                    }}
+                    style={{ borderRadius: "var(--radius-sm)", padding: "12px 14px", ...SUGGESTION_STYLES[s.type] }}
                   >
-                    <div
-                      className="text-xs font-bold"
-                      style={{
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                        color: "var(--muted)",
-                        marginBottom: 4,
-                      }}
-                    >
+                    <div className="text-xs font-bold" style={{ textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--muted)", marginBottom: 4 }}>
                       {SUGGESTION_LABELS[s.type] || "Tip"}
                     </div>
                     <div className="font-semibold text-sm mb-1">{s.title}</div>
-                    <div className="text-sm text-muted mb-3" style={{ lineHeight: 1.5 }}>
-                      {s.description}
-                    </div>
+                    <div className="text-sm text-muted mb-3" style={{ lineHeight: 1.5 }}>{s.description}</div>
                     <div className="flex gap-2">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => acceptSuggestion(s)}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => dismissSuggestion(s)}
-                      >
-                        Dismiss
-                      </button>
+                      <button className="btn btn-primary btn-sm" onClick={() => acceptSuggestion(s)}>Accept</button>
+                      <button className="btn btn-ghost btn-sm" onClick={() => dismissSuggestion(s)}>Dismiss</button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               !suggestionsLoading && (
-                <div
-                  className="text-sm text-muted"
-                  style={{ textAlign: "center", padding: "16px 0", lineHeight: 1.6 }}
-                >
-                  {tasks.length === 0
-                    ? "Add tasks to get AI-powered suggestions."
-                    : "No suggestions right now."}
+                /* Empty suggestions state — don't send users elsewhere */
+                <div className="empty-state" style={{ padding: "16px 0" }}>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}>✨</div>
+                  <div className="text-sm text-muted" style={{ textAlign: "center", lineHeight: 1.6 }}>
+                    {tasks.length === 0
+                      ? "Add your first task to get AI-powered suggestions."
+                      : "You're all caught up. Keep going!"}
+                  </div>
                 </div>
               )
             )}
           </div>
 
-          {/* Energy context hint */}
           <div className="card card-sm">
             <div className="card-title">Energy context</div>
             <div className="text-sm text-muted" style={{ lineHeight: 1.6 }}>
-              Tasks are ranked for your current energy level.{" "}
-              <span style={{ color: "var(--amber)" }}>⚡ Next</span> badge shows your best match.
-              Change energy in the sidebar.
+              Tasks are ranked for your current energy.{" "}
+              <span style={{ color: "var(--amber)" }}>⚡ Next</span> shows your best match.
             </div>
           </div>
         </aside>

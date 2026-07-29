@@ -3,17 +3,16 @@ import { Link } from "react-router-dom";
 import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useEnergy } from "../contexts/EnergyContext";
-
-const ENERGY_LABELS = ["💀 Exhausted", "😔 Low", "😐 Okay", "⚡ Good", "🔥 Peak"];
-const ENERGY_EMOJIS = ["💀", "😔", "😐", "⚡", "🔥"];
+import EnergyControl from "./EnergyControl";
 
 export default function Home() {
   const { user } = useUser();
-  const { energy, setEnergy } = useEnergy();
+  const { energy } = useEnergy();
   const [daily, setDaily] = useState({ tasksCompleted: 0, totalSessionMins: 0 });
   const [whatNext, setWhatNext] = useState(null);
   const [loadingNext, setLoadingNext] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [hasTasks, setHasTasks] = useState(true);
 
   const hour = new Date().getHours();
   const greeting =
@@ -28,7 +27,6 @@ export default function Home() {
     try {
       const { data: d } = await api.get("/stats/daily");
       setDaily(d ?? { tasksCompleted: 0, totalSessionMins: 0 });
-      // Derive a streak from weekly data
       const { data: w } = await api.get("/stats/weekly");
       if (w?.tasks) {
         const byDay = {};
@@ -54,8 +52,10 @@ export default function Home() {
     try {
       const data = await api.get(`/tasks/what-next?energyLevel=${energy}`);
       setWhatNext(data.task || null);
+      setHasTasks(!!data.task);
     } catch {
       setWhatNext(null);
+      setHasTasks(false);
     } finally {
       setLoadingNext(false);
     }
@@ -77,32 +77,20 @@ export default function Home() {
 
   return (
     <div>
-      {/* ── Greeting ─────────────────────────────────────────── */}
-      <h1 className="page-title">{greeting}{user?.name ? `, ${user.name.split(" ")[0]}` : ""} 👋</h1>
+      {/* ── Greeting ──────────────────────────────────── */}
+      <h1 className="page-title">
+        {greeting}{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+      </h1>
       <p className="page-subtitle">Your ADHD command centre</p>
 
-      {/* ── Energy Check-in ──────────────────────────────────── */}
+      {/* ── Energy Check-in (unified component) ───────── */}
       <div className="card mb-4">
         <div className="card-title">How's your energy right now?</div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              className={`energy-btn ${energy === n ? "selected" : ""}`}
-              onClick={() => { setEnergy(n); setTimeout(loadWhatNext, 100); }}
-              title={ENERGY_LABELS[n - 1]}
-            >
-              {ENERGY_EMOJIS[n - 1]}
-            </button>
-          ))}
-          <span className="text-sm text-muted" style={{ marginLeft: 8 }}>
-            {ENERGY_LABELS[energy - 1]}
-          </span>
-        </div>
+        <EnergyControl />
       </div>
 
       <div className="grid-main">
-        {/* ── Left column ───────────────────────────────────── */}
+        {/* ── Left column ───────────────────────────────── */}
         <div className="stack">
           {/* What Next card */}
           <div className="what-next-card">
@@ -113,7 +101,7 @@ export default function Home() {
               <>
                 <div className="what-next-task">{whatNext.title}</div>
                 <div className="what-next-reason">{whatNextReason(whatNext)}</div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   <Link to="/focus">
                     <button className="btn btn-primary">▶ Start Focus</button>
                   </Link>
@@ -125,11 +113,15 @@ export default function Home() {
                 </div>
               </>
             ) : (
+              /* Empty state: CTA to Brain Dump */
               <>
                 <div className="what-next-task" style={{ fontSize: 15 }}>No tasks yet</div>
-                <div className="what-next-reason">Add some tasks to get a personalised recommendation.</div>
-                <Link to="/todo">
-                  <button className="btn btn-primary">Add tasks</button>
+                <div className="what-next-reason">
+                  Start with a Brain Dump — just type everything on your mind
+                  and AI will turn it into structured tasks.
+                </div>
+                <Link to="/todo?tab=dump">
+                  <button className="btn btn-primary">🧠 Start Brain Dump</button>
                 </Link>
               </>
             )}
@@ -154,7 +146,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Right column ──────────────────────────────────── */}
+        {/* ── Right column ──────────────────────────────── */}
         <div className="stack">
           <div className="card">
             <div className="card-title">Quick actions</div>
@@ -166,7 +158,7 @@ export default function Home() {
               </Link>
               <Link to="/todo?tab=dump" style={{ textDecoration: "none" }}>
                 <button className="btn btn-secondary w-full">
-                  📝 Brain Dump → Tasks
+                  🧠 Brain Dump → Tasks
                 </button>
               </Link>
               <Link to="/mindful" style={{ textDecoration: "none" }}>
@@ -176,7 +168,7 @@ export default function Home() {
               </Link>
               <Link to="/dashboard" style={{ textDecoration: "none" }}>
                 <button className="btn btn-ghost w-full">
-                  📊 View Stats
+                  📊 View Progress
                 </button>
               </Link>
             </div>
