@@ -115,14 +115,21 @@ export default function Home() {
             ) : (
               /* Empty state: CTA to Brain Dump */
               <>
-                <div className="what-next-task" style={{ fontSize: 15 }}>No tasks yet</div>
+                <div className="what-next-task" style={{ fontSize: 15 }}>Your task list is empty</div>
                 <div className="what-next-reason">
-                  Start with a Brain Dump — just type everything on your mind
-                  and AI will turn it into structured tasks.
+                  No tasks, no stress — yet. Do a Brain Dump: type everything
+                  rattling around in your head and AI will turn it into a clear list.
                 </div>
-                <Link to="/todo?tab=dump">
-                  <button className="btn btn-primary">🧠 Start Brain Dump</button>
-                </Link>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <Link to="/todo?tab=dump">
+                    <button className="btn btn-primary">🧠 Brain Dump</button>
+                  </Link>
+                  <Link to="/todo">
+                    <button className="btn btn-ghost btn-sm" style={{ alignSelf: "center" }}>
+                      Add a task
+                    </button>
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -130,11 +137,15 @@ export default function Home() {
           {/* Today stats */}
           <div className="grid-3">
             <div className="stat-tile">
-              <div className="stat-value stat-green">{daily.tasksCompleted ?? 0}</div>
+              <div className="stat-value stat-green">
+                {daily.tasksCompleted > 0 ? daily.tasksCompleted : "—"}
+              </div>
               <div className="stat-label">Tasks done</div>
             </div>
             <div className="stat-tile">
-              <div className="stat-value stat-violet">{daily.totalSessionMins ?? 0}</div>
+              <div className="stat-value stat-violet">
+                {daily.totalSessionMins > 0 ? daily.totalSessionMins : "—"}
+              </div>
               <div className="stat-label">Focus mins</div>
             </div>
             <div className="stat-tile">
