@@ -303,13 +303,11 @@ function BottomNav({ onMoreClick }) {
 function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
   return (
     <>
-      {open && (
-        <div
-          className="bottom-sheet-overlay"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={`bottom-sheet-overlay${open ? " open" : ""}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div
         className={`bottom-sheet${open ? " open" : ""}`}
         role="dialog"
@@ -440,19 +438,17 @@ export default function App() {
             </Routes>
           </main>
 
-          {user && (
-            <>
-              <BottomNav onMoreClick={() => setMoreOpen(true)} />
-              <MoreSheet
-                open={moreOpen}
-                onClose={() => setMoreOpen(false)}
-                theme={theme}
-                setTheme={setTheme}
-                onLogout={logout}
-              />
-            </>
-          )}
+          {user && <BottomNav onMoreClick={() => setMoreOpen(true)} />}
         </div>
+        {user && (
+          <MoreSheet
+            open={moreOpen}
+            onClose={() => setMoreOpen(false)}
+            theme={theme}
+            setTheme={setTheme}
+            onLogout={logout}
+          />
+        )}
       </div>
     </EnergyProvider>
   );
