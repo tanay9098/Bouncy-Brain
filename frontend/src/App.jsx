@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
 import Auth from "./components/Auth";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
@@ -10,22 +10,16 @@ import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
 import ConnectorsPage from "./components/ConnectorsPage";
 import FocusOverlay from "./components/FocusOverlay";
+import EnergyControl from "./components/EnergyControl";
 import { useUser } from "./contexts/UserContext";
 import { EnergyProvider, useEnergy } from "./contexts/EnergyContext";
 
-// ── SVG Icon set ─────────────────────────────────────────────────────────
+// ── Icons ────────────────────────────────────────────────────────────────
 const Icons = {
-  Home: () => (
+  Today: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <path d="M3 10L12 3l9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z" />
       <path d="M9 21V12h6v9" />
-    </svg>
-  ),
-  Focus: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" />
     </svg>
   ),
   Tasks: () => (
@@ -34,28 +28,16 @@ const Icons = {
       <rect x="3" y="3" width="18" height="18" rx="3" />
     </svg>
   ),
-  Mind: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path d="M9.5 2a2.5 2.5 0 015 0v1A6.5 6.5 0 0121 9.5v2a2.5 2.5 0 01-5 0v-1a1.5 1.5 0 00-3 0v1a2.5 2.5 0 01-5 0v-2A6.5 6.5 0 019.5 3V2z" />
-      <path d="M12 13v8M8 21h8" />
-    </svg>
-  ),
-  Stats: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <path d="M8 17V13M12 17V9M16 17v-3" />
-    </svg>
-  ),
-  Calendar: () => (
+  Schedule: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
     </svg>
   ),
-  Deadline: () => (
+  Progress: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M8 17V13M12 17V9M16 17v-3" />
     </svg>
   ),
   Sun: () => (
@@ -74,16 +56,39 @@ const Icons = {
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
     </svg>
   ),
+  Focus: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+    </svg>
+  ),
+  Settings: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" />
+    </svg>
+  ),
+  Plug: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M12 22V12M5 12H19M8 12V7a4 4 0 018 0v5" />
+    </svg>
+  ),
 };
 
+// Collapsed to 4 primary destinations
 const NAV_ITEMS = [
-  { to: "/",          label: "Today",       icon: Icons.Home },
-  { to: "/focus",     label: "Focus",       icon: Icons.Focus },
-  { to: "/todo",      label: "Tasks",       icon: Icons.Tasks },
-  { to: "/mindful",   label: "Mindfulness", icon: Icons.Mind },
-  { to: "/dashboard", label: "Stats",       icon: Icons.Stats },
-  { to: "/deadline",  label: "Deadlines",   icon: Icons.Deadline },
-  { to: "/calendar",  label: "Calendar",    icon: Icons.Calendar },
+  { to: "/",          label: "Today",    icon: Icons.Today },
+  { to: "/todo",      label: "Tasks",    icon: Icons.Tasks },
+  { to: "/calendar",  label: "Schedule", icon: Icons.Schedule },
+  { to: "/dashboard", label: "Progress", icon: Icons.Progress },
+];
+
+// Secondary pages accessible from sidebar "More" section
+const SECONDARY_NAV = [
+  { to: "/focus",    label: "Focus Timer", icon: Icons.Focus },
+  { to: "/mindful",  label: "Mindfulness", icon: Icons.Today },
+  { to: "/deadline", label: "Deadlines",   icon: Icons.Schedule },
 ];
 
 const CONNECTORS = [
@@ -92,7 +97,7 @@ const CONNECTORS = [
     label: "Gmail",
     color: "#ea4335",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z" />
       </svg>
     ),
@@ -102,17 +107,17 @@ const CONNECTORS = [
     label: "Slack",
     color: "#4a154b",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.528 2.528 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 012.521-2.52 2.527 2.527 0 012.521 2.52v6.313A2.528 2.528 0 018.834 24a2.528 2.528 0 01-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 01-2.521-2.52A2.528 2.528 0 018.834 0a2.528 2.528 0 012.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 012.521 2.521 2.528 2.528 0 01-2.521 2.521H2.522A2.528 2.528 0 010 8.834a2.528 2.528 0 012.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 012.522-2.521A2.528 2.528 0 0124 8.834a2.528 2.528 0 01-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 01-2.523 2.521 2.527 2.527 0 01-2.52-2.521V2.522A2.527 2.527 0 0115.165 0a2.528 2.528 0 012.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 012.523 2.522A2.528 2.528 0 0115.165 24a2.527 2.527 0 01-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 01-2.52-2.523 2.526 2.526 0 012.52-2.52h6.313A2.527 2.527 0 0124 15.165a2.528 2.528 0 01-2.522 2.523h-6.313z" />
       </svg>
     ),
   },
   {
     id: "gcal",
-    label: "Google Calendar",
+    label: "Google Cal",
     color: "#1a73e8",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
       </svg>
     ),
@@ -121,78 +126,87 @@ const CONNECTORS = [
 
 function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   const location = useLocation();
-  const { energy, setEnergy } = useEnergy();
-  const ENERGY_EMOJIS = ["💀", "😔", "😐", "⚡", "🔥"];
 
   return (
     <>
       {open && <div className="sidebar-backdrop" onClick={onClose} />}
-      <nav className={`sidebar${open ? " open" : ""}`}>
+      <nav className={`sidebar${open ? " open" : ""}`} role="navigation" aria-label="Main navigation">
+        {/* Brand */}
         <div className="sidebar-brand">
-          <div className="sidebar-logo">BB</div>
+          <div className="sidebar-logo" aria-hidden="true">BB</div>
           <div>
             <div className="sidebar-title">Bouncy Brain</div>
             <div className="sidebar-subtitle">ADHD Buddy</div>
           </div>
         </div>
 
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className={`nav-item ${location.pathname === to ? "active" : ""}`}
-            onClick={onClose}
-          >
-            <Icon />
-            {label}
-          </Link>
-        ))}
+        {/* Primary nav — 4 destinations */}
+        <div className="sidebar-nav-section">
+          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === "/"}
+              className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
+              onClick={onClose}
+            >
+              <Icon />
+              {label}
+            </NavLink>
+          ))}
+        </div>
 
-        <div className="connectors-section">
-          <div className="connectors-label">Connectors</div>
+        {/* Secondary nav */}
+        <div className="sidebar-nav-section" style={{ marginTop: 8 }}>
+          <div className="sidebar-section-label">More</div>
+          {SECONDARY_NAV.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-item nav-item-sm${isActive ? " active" : ""}`}
+              onClick={onClose}
+            >
+              <Icon />
+              {label}
+            </NavLink>
+          ))}
+        </div>
+
+        {/* Connectors — compact rows */}
+        <div className="sidebar-nav-section" style={{ marginTop: 8 }}>
+          <div className="sidebar-section-label">Connectors</div>
           {CONNECTORS.map(({ id, label, color, icon: Icon }) => (
             <Link
               key={id}
               to="/connectors"
-              className={`connector-item ${location.pathname === "/connectors" ? "active" : ""}`}
+              className={`connector-row${location.pathname === "/connectors" ? " active" : ""}`}
               onClick={onClose}
             >
-              <span className="connector-icon" style={{ color, background: color + "20" }}>
+              <span className="connector-row-icon" style={{ color, background: color + "20" }}>
                 <Icon />
               </span>
-              <span className="connector-name">{label}</span>
+              <span className="connector-row-label">{label}</span>
             </Link>
           ))}
         </div>
 
+        {/* Pinned energy control */}
+        <div className="sidebar-energy">
+          <div className="sidebar-section-label">Energy level</div>
+          <EnergyControl compact />
+        </div>
+
+        {/* Footer controls */}
         <div className="sidebar-footer">
-          <div className="nav-divider" />
-
-          <div className="energy-selector">
-            <div className="energy-label">Energy level</div>
-            <div className="energy-dots">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  className={`energy-dot ${n <= energy ? "filled" : ""}`}
-                  onClick={() => setEnergy(n)}
-                  title={`${ENERGY_EMOJIS[n - 1]} Level ${n}`}
-                >
-                  {n <= energy ? "⚡" : ""}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <button
             className="theme-toggle"
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </button>
-
-          <button className="logout-btn" onClick={onLogout}>
+          <button className="logout-btn" onClick={onLogout} aria-label="Logout">
             <Icons.Logout />
             Logout
           </button>
@@ -202,21 +216,78 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   );
 }
 
+function TopBar({ theme, setTheme, onMenuClick }) {
+  const location = useLocation();
+  const currentNav = [...NAV_ITEMS, ...SECONDARY_NAV].find((n) =>
+    n.to === "/" ? location.pathname === "/" : location.pathname.startsWith(n.to)
+  );
+  const pageTitle = currentNav?.label ?? "Bouncy Brain";
+
+  return (
+    <header className="top-bar" role="banner">
+      <div className="top-bar-left">
+        <button
+          className="top-bar-menu-btn"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <div className="top-bar-brand">
+          <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }} aria-hidden="true">BB</div>
+          <span className="top-bar-page-title">{pageTitle}</span>
+        </div>
+      </div>
+
+      <div className="top-bar-right">
+        <Link
+          to="/connectors"
+          className="top-bar-icon-btn"
+          title="Connectors"
+          aria-label="Manage connectors"
+        >
+          <Icons.Plug />
+        </Link>
+        <button
+          className="top-bar-icon-btn"
+          onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+        </button>
+      </div>
+    </header>
+  );
+}
+
+// Bottom nav for mobile (4 primary destinations)
+function BottomNav() {
+  return (
+    <nav className="bottom-nav" aria-label="Mobile navigation">
+      {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={to === "/"}
+          className={({ isActive }) => `bottom-nav-item${isActive ? " active" : ""}`}
+        >
+          <Icon />
+          <span>{label}</span>
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useUser();
   if (loading) return null;
   if (!user) return <Auth />;
   return children;
-}
-
-function HamburgerIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  );
 }
 
 export default function App() {
@@ -261,29 +332,14 @@ export default function App() {
 
         <div className="main-wrapper">
           {user && (
-            <header className="mobile-header">
-              <button
-                className="mobile-menu-btn"
-                onClick={() => setSidebarOpen((o) => !o)}
-                aria-label="Open menu"
-              >
-                <HamburgerIcon />
-              </button>
-              <div className="mobile-header-brand">
-                <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }}>BB</div>
-                <span className="sidebar-title">Bouncy Brain</span>
-              </div>
-              <button
-                className="mobile-theme-btn"
-                onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
-              </button>
-            </header>
+            <TopBar
+              theme={theme}
+              setTheme={setTheme}
+              onMenuClick={() => setSidebarOpen((o) => !o)}
+            />
           )}
 
-          <main className="main-content">
+          <main className="main-content" id="main-content">
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -296,6 +352,8 @@ export default function App() {
               <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
             </Routes>
           </main>
+
+          {user && <BottomNav />}
         </div>
       </div>
     </EnergyProvider>

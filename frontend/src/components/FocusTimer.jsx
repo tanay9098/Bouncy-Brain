@@ -3,12 +3,11 @@ import api from "../services/api";
 import { setFocusActive, getDistractionCount, resetDistractionCount } from "./FocusOverlay";
 import Affirmations from "./Affirmations";
 
-const CIRCUMFERENCE = 2 * Math.PI * 90; // r = 90
+const CIRCUMFERENCE = 2 * Math.PI * 90;
 
 const MODES = [
   { id: "pomodoro", label: "Pomodoro", work: 25, brk: 5 },
   { id: "deep",     label: "Deep Work", work: 50, brk: 10 },
-  
 ];
 
 export default function FocusTimer() {
@@ -20,6 +19,12 @@ export default function FocusTimer() {
   const [active, setActive] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [reward, setReward] = useState(null);
+
+  // Task linking
+  const [tasks, setTasks] = useState([]);
+  const [linkedTaskId, setLinkedTaskId] = useState("");
+  const [tasksLoading, setTasksLoading] = useState(false);
+
   const affirmRef = useRef();
   const intervalRef = useRef();
 
@@ -27,7 +32,19 @@ export default function FocusTimer() {
   const progress = totalSecs > 0 ? 1 - seconds / totalSecs : 0;
   const dashOffset = CIRCUMFERENCE * (1 - progress);
 
-  // Apply preset when mode tab changes (not custom)
+  const linkedTask = tasks.find((t) => t._id === linkedTaskId) || null;
+
+  useEffect(() => { loadTasks(); }, []);
+
+  async function loadTasks() {
+    setTasksLoading(true);
+    try {
+      const res = await api.get("/tasks");
+      setTasks((res.tasks || []).filter((t) => !t.completed));
+    } catch { setTasks([]); }
+    finally { setTasksLoading(false); }
+  }
+
   useEffect(() => {
     const m = MODES[modeIdx];
     if (m.id !== "custom") {
@@ -37,7 +54,6 @@ export default function FocusTimer() {
     }
   }, [modeIdx]);
 
-  // Countdown tick
   useEffect(() => {
     if (active && seconds > 0) {
       intervalRef.current = setInterval(() => setSeconds((s) => s - 1), 1000);
@@ -50,7 +66,6 @@ export default function FocusTimer() {
     return () => clearInterval(intervalRef.current);
   }, [active, seconds]);
 
-  // Tell FocusOverlay when a session is running
   useEffect(() => {
     if (active) {
       setFocusActive(true, isWork ? MODES[modeIdx].label : "Break");
@@ -74,6 +89,7 @@ export default function FocusTimer() {
           durationMins: workMins,
           distractionCount,
           energyLevel,
+          taskId: linkedTaskId || undefined,
         });
       } catch {}
     } else {
@@ -119,10 +135,9 @@ export default function FocusTimer() {
   }
 
   const sessionLabels = ["", "Starting out 🙂", "In the zone!", "Focus machine 🔥", "Incredible! 🤯"];
-  const sessionLabel =
-    sessionCount === 0
-      ? "Start your first session"
-      : sessionLabels[Math.min(sessionCount, sessionLabels.length - 1)];
+  const sessionLabel = sessionCount === 0
+    ? "Start your first session"
+    : sessionLabels[Math.min(sessionCount, sessionLabels.length - 1)];
 
   return (
     <div>
@@ -132,56 +147,60 @@ export default function FocusTimer() {
       <p className="page-subtitle">Pomodoro-style sessions with tab-switch protection</p>
 
       <div className="grid-main">
-        {/* ── Timer card ───────────────────────────────────── */}
+        {/* ── Timer card ────────────────────────────────── */}
         <div className="card">
           <div className="mode-tabs">
             {MODES.map((m, i) => (
               <button
                 key={m.id}
                 className={`mode-tab ${modeIdx === i ? "active" : ""}`}
-                onClick={() => { setModeIdx(i); }}
+                onClick={() => setModeIdx(i)}
+                aria-pressed={modeIdx === i}
               >
                 {m.label}
               </button>
             ))}
           </div>
 
-          {modeIdx === 2 && (
-            <div className="flex gap-3 mb-4">
-              <div style={{ flex: 1 }}>
-                <div className="text-xs text-muted mb-1">Work (min)</div>
-                <input
-                  className="input"
-                  type="number"
-                  value={workMins}
-                  onChange={(e) => {
-                    const v = Math.max(1, Number(e.target.value));
-                    setWorkMins(v);
-                    if (!active) setSeconds(isWork ? v * 60 : breakMins * 60);
-                  }}
-                  min={1} max={120}
-                />
+          {/* Task picker — links session to a task */}
+          <div className="task-link-picker mb-4">
+            <label className="text-xs text-muted" style={{ display: "block", marginBottom: 6 }}>
+              Working on
+            </label>
+            {tasksLoading ? (
+              <div className="text-sm text-muted">Loading tasks...</div>
+            ) : tasks.length === 0 ? (
+              <div className="text-sm text-muted">
+                No tasks yet —{" "}
+                <a href="/todo" className="text-link">add some tasks</a> to link your session.
               </div>
-              <div style={{ flex: 1 }}>
-                <div className="text-xs text-muted mb-1">Break (min)</div>
-                <input
-                  className="input"
-                  type="number"
-                  value={breakMins}
-                  onChange={(e) => {
-                    const v = Math.max(1, Number(e.target.value));
-                    setBreakMins(v);
-                    if (!active && !isWork) setSeconds(v * 60);
-                  }}
-                  min={1} max={60}
-                />
+            ) : (
+              <select
+                className="select"
+                value={linkedTaskId}
+                onChange={(e) => setLinkedTaskId(e.target.value)}
+                aria-label="Select task to focus on"
+              >
+                <option value="">Free session (no specific task)</option>
+                {tasks.map((t) => (
+                  <option key={t._id} value={t._id}>{t.title}</option>
+                ))}
+              </select>
+            )}
+            {linkedTask && (
+              <div className="linked-task-badge">
+                <span>🎯</span>
+                <span>{linkedTask.title}</span>
+                {linkedTask.estimateMins && (
+                  <span className="text-xs text-muted">~{linkedTask.estimateMins}m</span>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Ring Timer */}
           <div className="ring-container">
-            <svg className="ring-svg" width="220" height="220" viewBox="0 0 220 220">
+            <svg className="ring-svg" width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
               <circle className="ring-track" cx="110" cy="110" r="90" />
               <circle
                 className={`ring-progress ${isWork ? "work" : "brk"}`}
@@ -190,44 +209,33 @@ export default function FocusTimer() {
                 strokeDashoffset={dashOffset}
               />
             </svg>
-            <div className="ring-text">
+            <div className="ring-text" role="timer" aria-label={`${fmt(seconds)} ${isWork ? "work" : "break"}`}>
               <div className="ring-time">{fmt(seconds)}</div>
               <div className="ring-label">{isWork ? "Work" : "Break"}</div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <button
               className={`btn btn-lg ${active ? "btn-secondary" : "btn-primary"}`}
               onClick={toggle}
               style={{ minWidth: 130 }}
+              aria-label={active ? "Pause timer" : "Start timer"}
             >
               {active ? "⏸ Pause" : "▶ Start"}
             </button>
-            <button className="btn btn-ghost" onClick={() => reset()}>
-              ↺ Reset
-            </button>
-            <button className="btn btn-ghost" onClick={switchPhase}>
+            <button className="btn btn-ghost" onClick={() => reset()} aria-label="Reset timer">↺ Reset</button>
+            <button className="btn btn-ghost" onClick={switchPhase} aria-label="Switch phase">
               {isWork ? "→ Break" : "→ Work"}
             </button>
           </div>
         </div>
 
-        {/* ── Right panel ──────────────────────────────────── */}
+        {/* ── Right panel ──────────────────────────────── */}
         <div className="stack">
           <div className="card">
             <div className="card-title">Today's Sessions</div>
-            <div
-              className="stat-value stat-violet"
-              style={{ fontSize: 42, marginBottom: 4 }}
-            >
+            <div className="stat-value stat-violet" style={{ fontSize: 42, marginBottom: 4 }}>
               {sessionCount}
             </div>
             <div className="text-sm text-muted">{sessionLabel}</div>
@@ -247,13 +255,14 @@ export default function FocusTimer() {
                 color: active ? "var(--green)" : "var(--muted)",
                 marginBottom: 10,
               }}
+              role="status"
+              aria-live="polite"
             >
               <span className="focus-status-dot" />
               {active ? "Active — guarding focus" : "Inactive"}
             </div>
             <div className="text-sm text-muted" style={{ lineHeight: 1.7 }}>
-              When you switch tabs during a session, you'll get a gentle nudge.
-              <br />
+              When you switch tabs during a session, you'll get a gentle nudge.{" "}
               <span style={{ color: "var(--violet-light)" }}>800ms debounce</span> — quick reference
               checks won't trigger it.
             </div>
