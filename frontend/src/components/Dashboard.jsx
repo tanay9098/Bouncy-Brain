@@ -5,8 +5,21 @@ import {
   LineChart, Line,
   XAxis, YAxis,
   Tooltip, CartesianGrid,
-  ResponsiveContainer,
+  ResponsiveContainer, ReferenceLine,
 } from "recharts";
+
+function ChartLegend({ items }) {
+  return (
+    <div className="chart-legend">
+      {items.map(({ label, color }) => (
+        <div key={label} className="chart-legend-item">
+          <div className="chart-legend-swatch" style={{ background: color }} />
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [daily, setDaily] = useState({ tasksCompleted: 0, totalSessionMins: 0 });
@@ -98,6 +111,9 @@ export default function Dashboard() {
     fontSize: 13,
   };
 
+  const hasWeeklyData = weekly.some((d) => d.tasks > 0 || d.minutes > 0);
+  const hasMonthlyData = monthly.some((d) => d.tasks > 0 || d.minutes > 0);
+
   return (
     <div>
       <h1 className="page-title">Stats</h1>
@@ -115,80 +131,116 @@ export default function Dashboard() {
         </div>
         <div className="stat-tile">
           <div className="stat-value stat-amber">
-            {streak > 0 ? `${streak}🔥` : "0"}
+            {streak > 0 ? `${streak}🔥` : "—"}
           </div>
           <div className="stat-label">Day streak</div>
         </div>
         <div className="stat-tile">
-          <div className="stat-value" style={{ color: "var(--text)" }}>{totalCompleted}</div>
+          <div className="stat-value" style={{ color: "var(--text)" }}>
+            {totalCompleted || "—"}
+          </div>
           <div className="stat-label">Tasks this week</div>
         </div>
       </div>
 
       {/* ── Weekly bar chart ────────────────────────────────── */}
       <div className="card mb-4">
-        <div className="card-title">Tasks Completed — Last 7 Days</div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={weekly} barSize={28}>
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "var(--muted)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: "var(--muted)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              allowDecimals={false}
-            />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              cursor={{ fill: "var(--violet-dim)" }}
-            />
-            <Bar dataKey="tasks" fill="var(--violet)" radius={[4, 4, 0, 0]} name="Tasks" />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="chart-header">
+          <div className="card-title" style={{ margin: 0 }}>Tasks Completed — Last 7 Days</div>
+          <ChartLegend items={[{ label: "Tasks", color: "var(--violet)" }]} />
+        </div>
+        {hasWeeklyData ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={weekly} barSize={28}>
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "var(--muted)", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: "var(--muted)", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+                domain={[0, "auto"]}
+                width={28}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{ fill: "var(--violet-dim)" }}
+              />
+              <ReferenceLine y={0} stroke="var(--border)" />
+              <Bar dataKey="tasks" fill="var(--violet)" radius={[4, 4, 0, 0]} name="Tasks" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="empty-state" style={{ padding: "32px 20px" }}>
+            <div className="empty-state-icon">📊</div>
+            <div className="empty-state-title">No data yet this week</div>
+            <div className="empty-state-body">
+              Complete tasks and focus sessions to see your daily progress here.
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Monthly trend ────────────────────────────────────── */}
       <div className="card">
-        <div className="card-title">30-Day Trend — Tasks & Focus Minutes</div>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={monthly}>
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "var(--muted)", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              interval={4}
-            />
-            <YAxis
-              tick={{ fill: "var(--muted)", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              allowDecimals={false}
-            />
-            <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Line
-              type="monotone"
-              dataKey="tasks"
-              stroke="var(--violet-light)"
-              strokeWidth={2}
-              dot={false}
-              name="Tasks"
-            />
-            <Line
-              type="monotone"
-              dataKey="minutes"
-              stroke="var(--green)"
-              strokeWidth={2}
-              dot={false}
-              name="Focus mins"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="chart-header">
+          <div className="card-title" style={{ margin: 0 }}>30-Day Trend</div>
+          <ChartLegend items={[
+            { label: "Tasks", color: "var(--violet-light)" },
+            { label: "Focus mins", color: "var(--green)" },
+          ]} />
+        </div>
+        {hasMonthlyData ? (
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={monthly}>
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "var(--muted)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                interval={4}
+              />
+              <YAxis
+                tick={{ fill: "var(--muted)", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+                domain={[0, "auto"]}
+                width={28}
+              />
+              <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+              <Tooltip contentStyle={tooltipStyle} />
+              <Line
+                type="monotone"
+                dataKey="tasks"
+                stroke="var(--violet-light)"
+                strokeWidth={2}
+                dot={false}
+                name="Tasks"
+              />
+              <Line
+                type="monotone"
+                dataKey="minutes"
+                stroke="var(--green)"
+                strokeWidth={2}
+                dot={false}
+                name="Focus mins"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="empty-state" style={{ padding: "32px 20px" }}>
+            <div className="empty-state-icon">📈</div>
+            <div className="empty-state-title">Your trend will appear here</div>
+            <div className="empty-state-body">
+              Start completing tasks and running focus sessions — your 30-day trend builds up over time.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

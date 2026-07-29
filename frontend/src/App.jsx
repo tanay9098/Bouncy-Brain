@@ -74,6 +74,13 @@ const Icons = {
       <path d="M12 22V12M5 12H19M8 12V7a4 4 0 018 0v5" />
     </svg>
   ),
+  More: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  ),
 };
 
 // Collapsed to 4 primary destinations
@@ -264,8 +271,8 @@ function TopBar({ theme, setTheme, onMenuClick }) {
   );
 }
 
-// Bottom nav for mobile (4 primary destinations)
-function BottomNav() {
+// Bottom nav for mobile (4 primary destinations + More)
+function BottomNav({ onMoreClick }) {
   return (
     <nav className="bottom-nav" aria-label="Mobile navigation">
       {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
@@ -279,7 +286,85 @@ function BottomNav() {
           <span>{label}</span>
         </NavLink>
       ))}
+      <button
+        className="bottom-nav-item"
+        onClick={onMoreClick}
+        aria-label="More options"
+        aria-haspopup="dialog"
+      >
+        <Icons.More />
+        <span>More</span>
+      </button>
     </nav>
+  );
+}
+
+// Slide-up sheet for secondary nav on mobile
+function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
+  return (
+    <>
+      {open && (
+        <div
+          className="bottom-sheet-overlay"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className={`bottom-sheet${open ? " open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="More navigation"
+      >
+        <div className="bottom-sheet-handle" aria-hidden="true" />
+
+        <div className="bottom-sheet-section">
+          {SECONDARY_NAV.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
+              onClick={onClose}
+            >
+              <Icon />
+              {label}
+            </NavLink>
+          ))}
+          <NavLink
+            to="/connectors"
+            className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
+            onClick={onClose}
+          >
+            <Icons.Plug />
+            Connectors
+          </NavLink>
+        </div>
+
+        <div className="bottom-sheet-section">
+          <div className="sidebar-section-label">Energy level</div>
+          <div style={{ padding: "4px 0" }}>
+            <EnergyControl compact />
+          </div>
+        </div>
+
+        <div className="bottom-sheet-footer">
+          <button
+            className="theme-toggle"
+            onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+          >
+            {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
+          <button
+            className="logout-btn"
+            onClick={() => { onLogout(); onClose(); }}
+          >
+            <Icons.Logout />
+            Logout
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -296,6 +381,7 @@ export default function App() {
     () => localStorage.getItem("bb-theme") || "dark"
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -312,6 +398,7 @@ export default function App() {
     setUser(null);
     setToken(null);
     setSidebarOpen(false);
+    setMoreOpen(false);
   }
 
   return (
@@ -353,7 +440,18 @@ export default function App() {
             </Routes>
           </main>
 
-          {user && <BottomNav />}
+          {user && (
+            <>
+              <BottomNav onMoreClick={() => setMoreOpen(true)} />
+              <MoreSheet
+                open={moreOpen}
+                onClose={() => setMoreOpen(false)}
+                theme={theme}
+                setTheme={setTheme}
+                onLogout={logout}
+              />
+            </>
+          )}
         </div>
       </div>
     </EnergyProvider>

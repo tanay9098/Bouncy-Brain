@@ -76,7 +76,9 @@ function AddTaskRow({ onAdd }) {
           style={{ flex: 1 }}
           placeholder="What do you need to do?"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
             if (e.key === "Tab" && title.trim() && !expanded) { e.preventDefault(); setExpanded(true); }
@@ -98,6 +100,7 @@ function AddTaskRow({ onAdd }) {
           onClick={submit}
           disabled={!title.trim()}
           aria-label="Add task"
+          style={{ minWidth: 64 }}
         >
           Add
         </button>
@@ -404,27 +407,36 @@ export default function TodoList() {
                   >
                     {editingId === t._id ? (
                       <div className="stack-sm">
-                        <input
-                          className="input"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          aria-label="Edit task title"
-                        />
-                        <input
-                          className="input"
-                          type="datetime-local"
-                          value={editDue}
-                          onChange={(e) => setEditDue(e.target.value)}
-                          aria-label="Edit due date"
-                        />
-                        <input
-                          className="input"
-                          type="number"
-                          value={editEstimate}
-                          onChange={(e) => setEditEstimate(e.target.value)}
-                          min={1}
-                          aria-label="Edit estimated minutes"
-                        />
+                        <div>
+                          <label className="text-xs text-muted" style={{ display: "block", marginBottom: 4 }}>Task title</label>
+                          <input
+                            className="input"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            aria-label="Edit task title"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted" style={{ display: "block", marginBottom: 4 }}>Due date</label>
+                          <input
+                            className="input"
+                            type="datetime-local"
+                            value={editDue}
+                            onChange={(e) => setEditDue(e.target.value)}
+                            aria-label="Edit due date"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted" style={{ display: "block", marginBottom: 4 }}>Estimated minutes</label>
+                          <input
+                            className="input"
+                            type="number"
+                            value={editEstimate}
+                            onChange={(e) => setEditEstimate(e.target.value)}
+                            min={1}
+                            aria-label="Edit estimated minutes"
+                          />
+                        </div>
                         <DreadMeter score={editDread} onChange={setEditDread} />
                         <div className="flex gap-2">
                           <button className="btn btn-primary btn-sm" onClick={() => saveEdit(t._id)}>Save</button>

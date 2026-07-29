@@ -95,7 +95,7 @@ export default function ConnectorsPage() {
       const { url } = await api.get(connector.urlEndpoint);
       window.location.href = url;
     } catch {
-      showToast('Failed to start connection. Check your environment variables.', 'error');
+      showToast('Connection unavailable. Please try again later.', 'error');
       setConnecting(p => ({ ...p, [connector.id]: false }));
     }
   }
@@ -194,11 +194,6 @@ export default function ConnectorsPage() {
         })}
       </div>
 
-      <div className="connectors-note">
-        <strong>Note:</strong> Connectors require environment variables
-        (<code>GOOGLE_CLIENT_SECRET</code>, <code>SLACK_CLIENT_ID</code>, <code>SLACK_CLIENT_SECRET</code>, <code>BACKEND_URL</code>)
-        to be set on the server before they will work.
-      </div>
     </div>
   );
 }
