@@ -23,7 +23,7 @@ const aiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const SYSTEM_PROMPT = `You are Bouncy Brain, a friendly and focused ADHD productivity coach.
+const SYSTEM_PROMPT = `You are JumpyBrain, a friendly and focused ADHD productivity coach.
 You help people with ADHD manage tasks, build momentum, and stay motivated throughout their day.
 Be concise, supportive, and practical.`;
 

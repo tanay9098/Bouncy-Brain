@@ -113,7 +113,7 @@ export default function Auth() {
           >
             BB
           </div>
-          <div className="auth-title">Bouncy Brain</div>
+          <div className="auth-title">JumpyBrain</div>
           <div className="auth-subtitle">
             {isLogin ? "Welcome back" : "Create your account"}
           </div>

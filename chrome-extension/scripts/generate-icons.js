@@ -58,7 +58,7 @@ function createPng(size, [r, g, b]) {
 const outDir = path.join(__dirname, '../public/icons');
 fs.mkdirSync(outDir, { recursive: true });
 
-// Bouncy Brain purple: #7c3aed = [124, 58, 237]
+// JumpyBrain purple: #7c3aed = [124, 58, 237]
 const purple = [124, 58, 237];
 for (const size of [16, 48, 128]) {
   fs.writeFileSync(path.join(outDir, `icon${size}.png`), createPng(size, purple));

@@ -25,7 +25,7 @@ const authRouter = require('../routes/auth');
 process.env.JWT_SECRET = 'test-secret';
 process.env.GOOGLE_CLIENT_ID = 'test-client-id';
 
-const MONGO_URI = process.env.MONGO_URI_TEST || 'mongodb://127.0.0.1:27017/bouncy_brain_test';
+const MONGO_URI = process.env.MONGO_URI_TEST || 'mongodb://127.0.0.1:27017/jumpybrain_test';
 
 let app;
 
