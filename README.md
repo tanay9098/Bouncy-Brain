@@ -163,7 +163,8 @@ JumpyBrain/
 
 ### Infrastructure
 - **Frontend** → Vercel
-- **Backend** → Railway
+- **Backend** → Render
+- **ML Service** → Render
 - **Database** → MongoDB Atlas (free tier compatible)
 
 ---
@@ -275,18 +276,26 @@ Authentication uses **Bearer JWT** tokens. Pass `Authorization: Bearer <token>` 
 
 ## Deployment
 
-### Backend (Railway)
+### Backend (Render)
 
-1. Create a new Railway project and connect this repository.
-2. Add a **MongoDB** plugin (or point `MONGODB_URI` to MongoDB Atlas).
-3. Set all environment variables from `.env.example` in the Railway Variables tab.
-4. Railway reads `backend/railway.toml` for the start command automatically.
+1. Create a new Render Web Service and connect this repository.
+2. Set the **Root Directory** to `backend`.
+3. Set **Runtime** to Docker — Render will use the existing `backend/Dockerfile`.
+4. Set all environment variables from `.env.example` in the Render Environment tab.
+5. Set `MONGODB_URI` to your MongoDB Atlas connection string.
+
+### ML Service (Render)
+
+1. Create a second Render Web Service in the same Render project as the backend.
+2. Set the **Root Directory** to `ml-service/` (or whichever directory contains the ML server).
+3. Set **Runtime** to Docker or Node depending on the ML service setup.
+4. Copy the public URL of this service and add it as `ML_SERVICE_URL` in the backend service's Environment tab.
 
 ### Frontend (Vercel)
 
 1. Import the repository into Vercel.
 2. Set the **Root Directory** to `frontend`.
-3. Set `VITE_API_URL` (or equivalent env var) to your Railway backend URL.
+3. Set `VITE_API_URL` (or equivalent env var) to your Render backend URL.
 4. Vercel will build and deploy automatically on every push to `main`.
 
 ---
