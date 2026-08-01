@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 
-app = FastAPI(title="Bouncy Brain ML Service", version="1.0.0")
+app = FastAPI(title="JumpyBrain ML Service", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,

@@ -142,7 +142,7 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
         <div className="sidebar-brand">
           <div className="sidebar-logo" aria-hidden="true">BB</div>
           <div>
-            <div className="sidebar-title">Bouncy Brain</div>
+            <div className="sidebar-title">JumpyBrain</div>
             <div className="sidebar-subtitle">ADHD Buddy</div>
           </div>
         </div>
@@ -228,7 +228,7 @@ function TopBar({ theme, setTheme, onMenuClick }) {
   const currentNav = [...NAV_ITEMS, ...SECONDARY_NAV].find((n) =>
     n.to === "/" ? location.pathname === "/" : location.pathname.startsWith(n.to)
   );
-  const pageTitle = currentNav?.label ?? "Bouncy Brain";
+  const pageTitle = currentNav?.label ?? "JumpyBrain";
 
   return (
     <header className="top-bar" role="banner">

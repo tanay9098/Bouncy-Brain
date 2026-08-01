@@ -76,7 +76,7 @@ export default function App() {
       <header className="popup-header">
         <div className="popup-logo">
           <div className="popup-logo-dot" />
-          Bouncy Brain
+          JumpyBrain
         </div>
         <div className="flex items-center gap-2">
           <span className="popup-user">{user?.name || user?.email || ''}</span>

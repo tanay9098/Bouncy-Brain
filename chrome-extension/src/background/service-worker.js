@@ -1,4 +1,4 @@
-// Bouncy Brain Background Service Worker
+// JumpyBrain Background Service Worker
 // Manages timer state across popup open/close via chrome.alarms
 
 const ALARM_NAME = 'bb-timer';
@@ -121,7 +121,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   chrome.notifications.create({
     type: 'basic',
     iconUrl: 'icons/icon48.png',
-    title: wasWork ? 'Bouncy Brain — Session Complete!' : 'Bouncy Brain — Break Over!',
+    title: wasWork ? 'JumpyBrain — Session Complete!' : 'JumpyBrain — Break Over!',
     message: wasWork
       ? `Great work! Take a ${state.breakMins}-minute break. 🎉`
       : 'Break is over. Ready to focus again? 💪',

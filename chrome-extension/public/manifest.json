@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Bouncy Brain",
+  "name": "JumpyBrain",
   "version": "1.0.0",
   "description": "ADHD productivity companion — tasks, focus timer, and smart ML recommendations in your browser.",
   "permissions": ["storage", "alarms", "notifications"],
@@ -11,7 +11,7 @@
   ],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Bouncy Brain",
+    "default_title": "JumpyBrain",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
