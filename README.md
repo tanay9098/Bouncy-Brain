@@ -191,13 +191,31 @@ cp backend/.env.example backend/.env
 |---|---|
 | `PORT` | Port the backend listens on (default `4000`) |
 | `NODE_ENV` | `development` or `production` |
-| `FRONTEND_URL` | Comma-separated list of allowed frontend origins |
+| `BACKEND_URL` | Public URL of this backend service (used for OAuth redirect URIs) |
+| `FRONTEND_URL` | Allowed frontend origin (your Vercel URL) |
 | `MONGODB_URI` | MongoDB Atlas connection string |
 | `JWT_SECRET` | Secret used to sign access tokens |
-| `JWT_REFRESH_SECRET` | Secret used to sign refresh tokens |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `OPENAI_API_KEY` | OpenAI API key |
-| `ML_SERVICE_URL` | URL of the ML priority microservice (optional) |
+| `SLACK_CLIENT_ID` | Slack app client ID |
+| `SLACK_CLIENT_SECRET` | Slack app client secret |
+| `ML_PRIORITY_URL` | URL of the ML priority microservice |
+| `VAPID_PUBLIC_KEY` | VAPID public key for web push notifications |
+| `VAPID_PRIVATE_KEY` | VAPID private key for web push notifications |
+| `VAPID_EMAIL` | `mailto:` address sent with VAPID requests |
+| `SMTP_HOST` | SMTP server hostname (e.g. `smtp.gmail.com`) |
+| `SMTP_PORT` | SMTP port (default `587`) |
+| `SMTP_USER` | SMTP login / sender email address |
+| `SMTP_PASS` | SMTP password or app-specific password |
+
+**Frontend** — create a `.env.local` in the `frontend/` directory:
+
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Full URL of the backend API (e.g. `https://your-backend.onrender.com`) |
+| `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY` above |
+| `VITE_GOOGLE_CLIENT_ID` | Same value as `GOOGLE_CLIENT_ID` above |
 
 ### Running the Backend
 
@@ -289,13 +307,16 @@ Authentication uses **Bearer JWT** tokens. Pass `Authorization: Bearer <token>` 
 1. Create a second Render Web Service in the same Render project as the backend.
 2. Set the **Root Directory** to `ml-service/` (or whichever directory contains the ML server).
 3. Set **Runtime** to Docker or Node depending on the ML service setup.
-4. Copy the public URL of this service and add it as `ML_SERVICE_URL` in the backend service's Environment tab.
+4. Copy the public URL of this service and add it as `ML_PRIORITY_URL` in the backend service's Environment tab.
 
 ### Frontend (Vercel)
 
 1. Import the repository into Vercel.
 2. Set the **Root Directory** to `frontend`.
-3. Set `VITE_API_URL` (or equivalent env var) to your Render backend URL.
+3. Add the following environment variables in the Vercel project settings:
+   - `VITE_API_URL` — your Render backend URL
+   - `VITE_VAPID_PUBLIC_KEY` — same value as `VAPID_PUBLIC_KEY` on Render
+   - `VITE_GOOGLE_CLIENT_ID` — same value as `GOOGLE_CLIENT_ID` on Render
 4. Vercel will build and deploy automatically on every push to `main`.
 
 ---
