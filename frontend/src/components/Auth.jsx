@@ -16,15 +16,6 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Initialise Google Identity Services
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !window.google) return;
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-    });
-  }, [isLogin, handleGoogleCredential]);
-
   const handleGoogleCredential = useCallback(async (response) => {
     setGoogleLoading(true);
     setError("");
@@ -47,6 +38,15 @@ export default function Auth() {
       setGoogleLoading(false);
     }
   }, [isLogin]);
+
+  // Initialise Google Identity Services
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !window.google) return;
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+    });
+  }, [isLogin, handleGoogleCredential]);
 
   function launchGoogleOneTap() {
     if (!GOOGLE_CLIENT_ID) {
