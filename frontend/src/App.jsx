@@ -230,7 +230,7 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   );
 }
 
-function TopBar({ theme, setTheme, onMenuClick }) {
+function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
   const location = useLocation();
   const currentNav = [...NAV_ITEMS, ...SECONDARY_NAV].find((n) =>
     n.to === "/" ? location.pathname === "/" : location.pathname.startsWith(n.to)
@@ -272,6 +272,14 @@ function TopBar({ theme, setTheme, onMenuClick }) {
           aria-label="Toggle theme"
         >
           {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
+        </button>
+        <button
+          className="top-bar-icon-btn top-bar-logout-btn"
+          onClick={onLogout}
+          aria-label="Logout"
+          title="Logout"
+        >
+          <Icons.Logout />
         </button>
       </div>
     </header>
@@ -512,6 +520,7 @@ export default function App() {
               theme={theme}
               setTheme={setTheme}
               onMenuClick={() => setSidebarOpen((o) => !o)}
+              onLogout={logout}
             />
           )}
 
