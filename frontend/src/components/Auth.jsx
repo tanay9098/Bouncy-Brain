@@ -115,7 +115,7 @@ export default function Auth() {
               boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
             }}
           >
-            BB
+            JB
           </div>
           <div className="auth-title">JumpyBrain</div>
           <div className="auth-subtitle">
