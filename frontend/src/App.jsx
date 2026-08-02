@@ -140,7 +140,7 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
       <nav className={`sidebar${open ? " open" : ""}`} role="navigation" aria-label="Main navigation">
         {/* Brand */}
         <div className="sidebar-brand">
-          <div className="sidebar-logo" aria-hidden="true">BB</div>
+          <div className="sidebar-logo" aria-hidden="true">JB</div>
           <div>
             <div className="sidebar-title">JumpyBrain</div>
             <div className="sidebar-subtitle">ADHD Buddy</div>
@@ -245,7 +245,7 @@ function TopBar({ theme, setTheme, onMenuClick }) {
           </svg>
         </button>
         <div className="top-bar-brand">
-          <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }} aria-hidden="true">BB</div>
+          <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }} aria-hidden="true">JB</div>
           <span className="top-bar-page-title">{pageTitle}</span>
         </div>
       </div>

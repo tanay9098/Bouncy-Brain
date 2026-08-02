@@ -27,7 +27,7 @@ export default function AuthScreen({ onLogin }) {
 
   return (
     <div className="auth-wrap">
-      <div className="auth-logo">BB</div>
+      <div className="auth-logo">JB</div>
       <div className="auth-sub">Sign in to JumpyBrain</div>
 
       <form className="auth-form" onSubmit={handleSubmit}>
