@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
+import api from "./services/api";
 import Auth from "./components/Auth";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
@@ -103,6 +104,8 @@ const CONNECTORS = [
     id: "gmail",
     label: "Gmail",
     color: "#ea4335",
+    urlEndpoint: "/integrations/google/url",
+    syncEndpoint: "/integrations/gmail/sync",
     icon: () => (
       <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z" />
@@ -113,6 +116,8 @@ const CONNECTORS = [
     id: "slack",
     label: "Slack",
     color: "#4a154b",
+    urlEndpoint: "/integrations/slack/url",
+    syncEndpoint: "/integrations/slack/sync",
     icon: () => (
       <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.528 2.528 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 012.521-2.52 2.527 2.527 0 012.521 2.52v6.313A2.528 2.528 0 018.834 24a2.528 2.528 0 01-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 01-2.521-2.52A2.528 2.528 0 018.834 0a2.528 2.528 0 012.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 012.521 2.521 2.528 2.528 0 01-2.521 2.521H2.522A2.528 2.528 0 010 8.834a2.528 2.528 0 012.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 012.522-2.521A2.528 2.528 0 0124 8.834a2.528 2.528 0 01-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 01-2.523 2.521 2.527 2.527 0 01-2.52-2.521V2.522A2.527 2.527 0 0115.165 0a2.528 2.528 0 012.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 012.523 2.522A2.528 2.528 0 0115.165 24a2.527 2.527 0 01-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 01-2.52-2.523 2.526 2.526 0 012.52-2.52h6.313A2.527 2.527 0 0124 15.165a2.528 2.528 0 01-2.522 2.523h-6.313z" />
@@ -123,6 +128,8 @@ const CONNECTORS = [
     id: "gcal",
     label: "Google Cal",
     color: "#1a73e8",
+    urlEndpoint: "/integrations/google/url",
+    syncEndpoint: "/integrations/gcal/sync",
     icon: () => (
       <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
         <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z" />
@@ -299,6 +306,94 @@ function BottomNav({ onMoreClick }) {
   );
 }
 
+function SheetConnectors({ open }) {
+  const [status, setStatus] = useState(null);
+  const [syncing, setSyncing] = useState({});
+  const [connecting, setConnecting] = useState({});
+
+  useEffect(() => {
+    if (!open) return;
+    api.get('/integrations/status').then(setStatus).catch(() => {});
+  }, [open]);
+
+  async function handleConnect(connector) {
+    setConnecting(p => ({ ...p, [connector.id]: true }));
+    try {
+      const { url } = await api.get(connector.urlEndpoint);
+      window.location.href = url;
+    } catch {
+      setConnecting(p => ({ ...p, [connector.id]: false }));
+    }
+  }
+
+  async function handleSync(connector) {
+    setSyncing(p => ({ ...p, [connector.id]: true }));
+    try {
+      await api.post(connector.syncEndpoint);
+      const data = await api.get('/integrations/status');
+      setStatus(data);
+    } catch {
+    } finally {
+      setSyncing(p => ({ ...p, [connector.id]: false }));
+    }
+  }
+
+  async function handleDisconnect(connector) {
+    try {
+      await api.delete(`/integrations/${connector.id}`);
+      const data = await api.get('/integrations/status');
+      setStatus(data);
+    } catch {}
+  }
+
+  return (
+    <div className="sheet-connectors">
+      <div className="sidebar-section-label">Connectors</div>
+      {CONNECTORS.map((connector) => {
+        const s = status?.[connector.id];
+        const isConnected = !!s?.connected;
+        const Icon = connector.icon;
+        return (
+          <div key={connector.id} className="sheet-connector-row">
+            <span className="sheet-connector-icon" style={{ color: connector.color, background: connector.color + '18' }}>
+              <Icon />
+            </span>
+            <span className="sheet-connector-label">{connector.label}</span>
+            <span className={`sheet-connector-dot${isConnected ? ' connected' : ''}`} />
+            {isConnected ? (
+              <>
+                <button
+                  className="sheet-connector-btn"
+                  onClick={() => handleSync(connector)}
+                  disabled={syncing[connector.id]}
+                >
+                  {syncing[connector.id] ? '…' : 'Sync'}
+                </button>
+                <button
+                  className="sheet-connector-btn sheet-connector-btn--off"
+                  onClick={() => handleDisconnect(connector)}
+                  aria-label={`Disconnect ${connector.label}`}
+                >
+                  ×
+                </button>
+              </>
+            ) : (
+              <button
+                className="sheet-connector-btn sheet-connector-btn--on"
+                onClick={() => handleConnect(connector)}
+                disabled={connecting[connector.id]}
+                style={{ '--c': connector.color }}
+              >
+                {connecting[connector.id] ? '…' : 'Connect'}
+              </button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Slide-up sheet for secondary nav on mobile
 function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
   return (
@@ -328,14 +423,10 @@ function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
               {label}
             </NavLink>
           ))}
-          <NavLink
-            to="/connectors"
-            className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
-            onClick={onClose}
-          >
-            <Icons.Plug />
-            Connectors
-          </NavLink>
+        </div>
+
+        <div className="bottom-sheet-section">
+          <SheetConnectors open={open} />
         </div>
 
         <div className="bottom-sheet-section">
