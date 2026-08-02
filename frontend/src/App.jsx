@@ -12,7 +12,7 @@ import ConnectorsPage from "./components/ConnectorsPage";
 import FocusOverlay from "./components/FocusOverlay";
 import EnergyControl from "./components/EnergyControl";
 import { useUser } from "./contexts/UserContext";
-import { EnergyProvider, useEnergy } from "./contexts/EnergyContext";
+import { EnergyProvider } from "./contexts/EnergyContext";
 
 // ── Icons ────────────────────────────────────────────────────────────────
 const Icons = {
