@@ -307,7 +307,7 @@ function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
   );
 }
 
-// Bottom nav for mobile (4 primary destinations + Logout)
+// Bottom nav for mobile (4 primary destinations + Profile & Settings)
 function BottomNav({ onLogout }) {
   return (
     <nav className="bottom-nav" aria-label="Mobile navigation">
@@ -322,14 +322,14 @@ function BottomNav({ onLogout }) {
           <span>{label}</span>
         </NavLink>
       ))}
-      <button
-        className="bottom-nav-item"
-        onClick={onLogout}
-        aria-label="Logout"
+      <NavLink
+        to="/settings"
+        className={({ isActive }) => `bottom-nav-item${isActive ? " active" : ""}`}
+        aria-label="Profile & Settings"
       >
-        <Icons.Logout />
-        <span>Logout</span>
-      </button>
+        <Icons.Profile />
+        <span>Profile</span>
+      </NavLink>
     </nav>
   );
 }
