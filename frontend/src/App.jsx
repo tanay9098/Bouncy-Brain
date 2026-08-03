@@ -12,6 +12,7 @@ import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
 import ConnectorsPage from "./components/ConnectorsPage";
 import ProfileSettings from "./components/ProfileSettings";
+import BlockingSettings from "./components/BlockingSettings";
 import FocusOverlay from "./components/FocusOverlay";
 import EnergyControl from "./components/EnergyControl";
 import { useUser } from "./contexts/UserContext";
@@ -105,6 +106,7 @@ const SECONDARY_NAV = [
   { to: "/focus",    label: "Focus Timer", icon: Icons.Focus },
   { to: "/mindful",  label: "Mindfulness", icon: Icons.Today },
   { to: "/deadline", label: "Deadlines",   icon: Icons.Schedule },
+  { to: "/blocking", label: "Blocking Rules", icon: Icons.Settings },
   { to: "/settings", label: "Profile & Settings", icon: Icons.Profile },
 ];
 
@@ -566,6 +568,7 @@ export default function App() {
               <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
               <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
+              <Route path="/blocking" element={<ProtectedRoute><BlockingSettings /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><ProfileSettings onThemeChange={setTheme} /></ProtectedRoute>} />
             </Routes>
           </main>
