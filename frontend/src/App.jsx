@@ -10,6 +10,7 @@ import Mindfulness from "./components/Mindfulness";
 import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
 import ConnectorsPage from "./components/ConnectorsPage";
+import ProfileSettings from "./components/ProfileSettings";
 import FocusOverlay from "./components/FocusOverlay";
 import EnergyControl from "./components/EnergyControl";
 import { useUser } from "./contexts/UserContext";
@@ -82,6 +83,12 @@ const Icons = {
       <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   ),
+  Profile: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  ),
 };
 
 // Collapsed to 4 primary destinations
@@ -97,6 +104,7 @@ const SECONDARY_NAV = [
   { to: "/focus",    label: "Focus Timer", icon: Icons.Focus },
   { to: "/mindful",  label: "Mindfulness", icon: Icons.Today },
   { to: "/deadline", label: "Deadlines",   icon: Icons.Schedule },
+  { to: "/settings", label: "Profile & Settings", icon: Icons.Profile },
 ];
 
 const CONNECTORS = [
@@ -232,10 +240,15 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
 
 function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
   const location = useLocation();
+  const { user } = useUser();
   const currentNav = [...NAV_ITEMS, ...SECONDARY_NAV].find((n) =>
     n.to === "/" ? location.pathname === "/" : location.pathname.startsWith(n.to)
   );
   const pageTitle = currentNav?.label ?? "JumpyBrain";
+
+  const initials = user?.name
+    ? user.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0].toUpperCase()).join("")
+    : (user?.email || "?")[0].toUpperCase();
 
   return (
     <header className="top-bar" role="banner">
@@ -273,6 +286,14 @@ function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
         >
           {theme === "dark" ? <Icons.Sun /> : <Icons.Moon />}
         </button>
+        <Link
+          to="/settings"
+          className="top-bar-avatar"
+          title="Profile & Settings"
+          aria-label="Profile and settings"
+        >
+          {initials}
+        </Link>
         <button
           className="top-bar-icon-btn top-bar-logout-btn"
           onClick={onLogout}
@@ -479,10 +500,18 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // Apply theme whenever it changes
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("bb-theme", theme);
   }, [theme]);
+
+  // Sync theme from user's saved preference when they log in
+  useEffect(() => {
+    if (user?.preferredTheme) {
+      setTheme(user.preferredTheme);
+    }
+  }, [user?.preferredTheme]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted") {
@@ -534,6 +563,7 @@ export default function App() {
               <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
               <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><ProfileSettings onThemeChange={setTheme} /></ProtectedRoute>} />
             </Routes>
           </main>
 

@@ -45,7 +45,7 @@ router.post('/signup', authLimiter, async (req, res) => {
       authProviders: ['EMAIL_PASSWORD'],
     });
     const token = makeToken(user._id);
-    res.json({ user: { id: user._id, email: user.email, name: user.name }, token });
+    res.json({ user: { id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme }, token });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -74,7 +74,7 @@ router.post('/login', authLimiter, async (req, res) => {
   if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
 
   const token = makeToken(user._id);
-  res.json({ user: { id: user._id, email: user.email, name: user.name }, token });
+  res.json({ user: { id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme }, token });
 });
 
 // Google OAuth
@@ -112,7 +112,7 @@ router.post('/google', authLimiter, async (req, res) => {
       });
       const token = makeToken(user._id);
       return res.status(201).json({
-        user: { id: user._id, email: user.email, name: user.name },
+        user: { id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme },
         token,
         isNewUser: true,
       });
@@ -121,7 +121,7 @@ router.post('/google', authLimiter, async (req, res) => {
     // Scenario 2: Existing Google-linked account — sign in
     if (user.authProviders.includes('GOOGLE')) {
       const token = makeToken(user._id);
-      return res.json({ user: { id: user._id, email: user.email, name: user.name }, token });
+      return res.json({ user: { id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme }, token });
     }
 
     // Scenario 3 & 4: Account exists with email/password — block and surface clear error

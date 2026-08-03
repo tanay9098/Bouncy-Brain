@@ -17,6 +17,16 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format'],
   },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'non-binary', 'prefer-not-to-say', ''],
+    default: '',
+  },
+  preferredTheme: {
+    type: String,
+    enum: ['dark', 'light'],
+    default: 'dark',
+  },
   passwordHash: { type: String, default: null },
   authProviders: {
     type: [{ type: String, enum: ['EMAIL_PASSWORD', 'GOOGLE'] }],

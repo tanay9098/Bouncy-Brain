@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 
 const authRoutes = require('./routes/auth');
+const profileRoutes = require('./routes/profile');
 const taskRoutes = require('./routes/tasks');
 const sessionRoutes = require('./routes/sessions');
 const pushRoutes = require('./routes/push');
@@ -92,6 +93,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/push', pushRoutes);
