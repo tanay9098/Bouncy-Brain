@@ -1,0 +1,316 @@
+import React, { useState } from "react";
+import { useUser } from "../contexts/UserContext";
+import { changePassword } from "../services/api";
+
+const GENDER_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "non-binary", label: "Non-binary" },
+  { value: "prefer-not-to-say", label: "Rather not say" },
+];
+
+function getInitials(name, email) {
+  if (name && name.trim()) {
+    return name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join("");
+  }
+  return (email || "?")[0].toUpperCase();
+}
+
+export default function ProfileSettings({ onThemeChange }) {
+  const { user, updateUser } = useUser();
+
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    gender: user?.gender || "",
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState(null);
+
+  const [selectedTheme, setSelectedTheme] = useState(user?.preferredTheme || "dark");
+  const [themeSaving, setThemeSaving] = useState(false);
+  const [themeMsg, setThemeMsg] = useState(null);
+
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState(null);
+
+  async function handleProfileSave(e) {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileMsg(null);
+    try {
+      await updateUser({
+        name: profileForm.name,
+        email: profileForm.email,
+        gender: profileForm.gender,
+      });
+      setProfileMsg({ type: "success", text: "Profile updated successfully" });
+    } catch (err) {
+      const msg = err?.response?.data?.error || "Failed to update profile";
+      setProfileMsg({ type: "error", text: msg });
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
+  async function handleThemeSave(theme) {
+    setThemeSaving(true);
+    setThemeMsg(null);
+    try {
+      await updateUser({ preferredTheme: theme });
+      onThemeChange(theme);
+      setThemeMsg({ type: "success", text: "Theme saved" });
+      setTimeout(() => setThemeMsg(null), 2000);
+    } catch {
+      setThemeMsg({ type: "error", text: "Failed to save theme" });
+    } finally {
+      setThemeSaving(false);
+    }
+  }
+
+  function handleThemeSelect(theme) {
+    setSelectedTheme(theme);
+    handleThemeSave(theme);
+  }
+
+  async function handlePasswordSave(e) {
+    e.preventDefault();
+    setPwMsg(null);
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwMsg({ type: "error", text: "New passwords do not match" });
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
+      setPwMsg({ type: "success", text: "Password changed successfully" });
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      const msg = err?.response?.data?.error || "Failed to change password";
+      setPwMsg({ type: "error", text: msg });
+    } finally {
+      setPwSaving(false);
+    }
+  }
+
+  const hasPassword = user?.authProviders?.includes?.("EMAIL_PASSWORD");
+
+  return (
+    <div className="profile-settings-page">
+      <div className="profile-settings-container">
+        <div className="profile-settings-header">
+          <h1 className="profile-settings-title">Profile &amp; Settings</h1>
+          <p className="profile-settings-subtitle">Manage your account details and appearance</p>
+        </div>
+
+        {/* Profile Info */}
+        <section className="profile-settings-card">
+          <div className="profile-settings-card-header">
+            <h2 className="profile-settings-card-title">Profile Information</h2>
+          </div>
+
+          <div className="profile-avatar-row">
+            <div className="profile-avatar">
+              {getInitials(user?.name, user?.email)}
+            </div>
+            <div>
+              <div className="profile-avatar-name">{user?.name || "No name set"}</div>
+              <div className="profile-avatar-email">{user?.email}</div>
+            </div>
+          </div>
+
+          <form onSubmit={handleProfileSave} className="profile-form">
+            <div className="profile-form-grid">
+              <div className="profile-form-field">
+                <label className="profile-form-label" htmlFor="ps-name">Display Name</label>
+                <input
+                  id="ps-name"
+                  className="profile-form-input"
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Your name"
+                  maxLength={100}
+                  autoComplete="name"
+                />
+              </div>
+
+              <div className="profile-form-field">
+                <label className="profile-form-label" htmlFor="ps-email">Email Address</label>
+                <input
+                  id="ps-email"
+                  className="profile-form-input"
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm((f) => ({ ...f, email: e.target.value }))}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </div>
+
+              <div className="profile-form-field">
+                <label className="profile-form-label" htmlFor="ps-gender">Gender</label>
+                <select
+                  id="ps-gender"
+                  className="profile-form-input profile-form-select"
+                  value={profileForm.gender}
+                  onChange={(e) => setProfileForm((f) => ({ ...f, gender: e.target.value }))}
+                >
+                  {GENDER_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {profileMsg && (
+              <div className={`profile-msg profile-msg--${profileMsg.type}`}>
+                {profileMsg.text}
+              </div>
+            )}
+
+            <div className="profile-form-actions">
+              <button
+                type="submit"
+                className="profile-save-btn"
+                disabled={profileSaving}
+              >
+                {profileSaving ? "Saving…" : "Save Profile"}
+              </button>
+            </div>
+          </form>
+        </section>
+
+        {/* Appearance */}
+        <section className="profile-settings-card">
+          <div className="profile-settings-card-header">
+            <h2 className="profile-settings-card-title">Appearance</h2>
+            <p className="profile-settings-card-desc">Choose how JumpyBrain looks for you</p>
+          </div>
+
+          <div className="theme-picker">
+            <button
+              className={`theme-option${selectedTheme === "dark" ? " active" : ""}`}
+              onClick={() => handleThemeSelect("dark")}
+              disabled={themeSaving}
+              type="button"
+              aria-pressed={selectedTheme === "dark"}
+            >
+              <div className="theme-option-preview theme-option-preview--dark">
+                <div className="theme-preview-bar" />
+                <div className="theme-preview-card" />
+                <div className="theme-preview-card theme-preview-card--sm" />
+              </div>
+              <div className="theme-option-label">
+                <span className="theme-option-name">Dark</span>
+                <span className="theme-option-desc">Easy on the eyes at night</span>
+              </div>
+              {selectedTheme === "dark" && <span className="theme-option-check">✓</span>}
+            </button>
+
+            <button
+              className={`theme-option${selectedTheme === "light" ? " active" : ""}`}
+              onClick={() => handleThemeSelect("light")}
+              disabled={themeSaving}
+              type="button"
+              aria-pressed={selectedTheme === "light"}
+            >
+              <div className="theme-option-preview theme-option-preview--light">
+                <div className="theme-preview-bar" />
+                <div className="theme-preview-card" />
+                <div className="theme-preview-card theme-preview-card--sm" />
+              </div>
+              <div className="theme-option-label">
+                <span className="theme-option-name">Light</span>
+                <span className="theme-option-desc">Bright and clear</span>
+              </div>
+              {selectedTheme === "light" && <span className="theme-option-check">✓</span>}
+            </button>
+          </div>
+
+          {themeMsg && (
+            <div className={`profile-msg profile-msg--${themeMsg.type}`} style={{ marginTop: 12 }}>
+              {themeMsg.text}
+            </div>
+          )}
+        </section>
+
+        {/* Change Password — only shown for email/password accounts */}
+        {hasPassword && (
+          <section className="profile-settings-card">
+            <div className="profile-settings-card-header">
+              <h2 className="profile-settings-card-title">Change Password</h2>
+              <p className="profile-settings-card-desc">Use a strong password with letters and numbers</p>
+            </div>
+
+            <form onSubmit={handlePasswordSave} className="profile-form">
+              <div className="profile-form-grid profile-form-grid--single">
+                <div className="profile-form-field">
+                  <label className="profile-form-label" htmlFor="ps-cur-pw">Current Password</label>
+                  <input
+                    id="ps-cur-pw"
+                    className="profile-form-input"
+                    type="password"
+                    value={pwForm.currentPassword}
+                    onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                    placeholder="Enter current password"
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                <div className="profile-form-field">
+                  <label className="profile-form-label" htmlFor="ps-new-pw">New Password</label>
+                  <input
+                    id="ps-new-pw"
+                    className="profile-form-input"
+                    type="password"
+                    value={pwForm.newPassword}
+                    onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                    placeholder="Min 8 chars, include a number"
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <div className="profile-form-field">
+                  <label className="profile-form-label" htmlFor="ps-confirm-pw">Confirm New Password</label>
+                  <input
+                    id="ps-confirm-pw"
+                    className="profile-form-input"
+                    type="password"
+                    value={pwForm.confirmPassword}
+                    onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    placeholder="Repeat new password"
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              {pwMsg && (
+                <div className={`profile-msg profile-msg--${pwMsg.type}`}>
+                  {pwMsg.text}
+                </div>
+              )}
+
+              <div className="profile-form-actions">
+                <button
+                  type="submit"
+                  className="profile-save-btn"
+                  disabled={pwSaving}
+                >
+                  {pwSaving ? "Saving…" : "Change Password"}
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}

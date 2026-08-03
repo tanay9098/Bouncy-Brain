@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import api from "../services/api";
+import api, { updateProfile } from "../services/api";
 import { connectSocket, disconnectSocket, getSocket } from "../services/socket";
 import { queryClient } from "../providers/QueryProvider";
 
@@ -64,8 +64,15 @@ export function UserProvider({ children }) {
     }
   }
 
+  // Update user profile via API and sync local state
+  async function updateUser(data) {
+    const updated = await updateProfile(data);
+    saveUser({ ...user, ...updated });
+    return updated;
+  }
+
   return (
-    <ctx.Provider value={{ user, setUser: saveUser, token, setToken: saveToken, loading }}>
+    <ctx.Provider value={{ user, setUser: saveUser, updateUser, token, setToken: saveToken, loading }}>
       {children}
     </ctx.Provider>
   );
