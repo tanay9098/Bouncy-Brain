@@ -6,6 +6,7 @@ import WhatNext from './components/WhatNext.jsx'
 import QuickTaskAdd from './components/QuickTaskAdd.jsx'
 import QuickBrainDump from './components/QuickBrainDump.jsx'
 import QuickTimer from './components/QuickTimer.jsx'
+import BlockingTab from './components/BlockingTab.jsx'
 import NavBar from './components/NavBar.jsx'
 
 export default function App() {
@@ -98,10 +99,11 @@ export default function App() {
       </header>
 
       <div className="popup-content">
-        {tab === 'next'  && <WhatNext taskRevision={taskRevision} />}
-        {tab === 'add'   && <QuickTaskAdd onAdded={() => setTab('next')} />}
-        {tab === 'dump'  && <QuickBrainDump />}
-        {tab === 'timer' && <QuickTimer />}
+        {tab === 'next'     && <WhatNext taskRevision={taskRevision} />}
+        {tab === 'add'      && <QuickTaskAdd onAdded={() => setTab('next')} />}
+        {tab === 'dump'     && <QuickBrainDump />}
+        {tab === 'timer'    && <QuickTimer />}
+        {tab === 'blocking' && <BlockingTab />}
       </div>
 
       <NavBar active={tab} onChange={setTab} />

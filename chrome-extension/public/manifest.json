@@ -3,11 +3,12 @@
   "name": "JumpyBrain",
   "version": "1.0.0",
   "description": "ADHD productivity companion — tasks, focus timer, and smart ML recommendations in your browser.",
-  "permissions": ["storage", "alarms", "notifications"],
+  "permissions": ["storage", "alarms", "notifications", "declarativeNetRequest", "tabs"],
   "host_permissions": [
     "http://localhost:4000/*",
     "https://*.railway.app/*",
-    "https://*.vercel.app/*"
+    "https://*.vercel.app/*",
+    "*://*/*"
   ],
   "action": {
     "default_popup": "index.html",
