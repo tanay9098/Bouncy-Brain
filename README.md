@@ -1,4 +1,4 @@
-# JumpyBrain — ADHD Productivity Companion
+# JumpyBrain — Focus better. Do more. Feel calm.
 
 JumpyBrain is a productivity application built specifically for people with ADHD/ADD. It combines smart task management, focus tools, mindfulness exercises, and AI-powered recommendations to help you stay on track — without overwhelming you.
 
@@ -26,7 +26,7 @@ JumpyBrain is a productivity application built specifically for people with ADHD
 
 ## What Is JumpyBrain?
 
-JumpyBrain is your personal ADHD buddy — a web app (plus Chrome extension) that adapts to your current energy level and helps you figure out *what to do next*, without the decision paralysis that comes with ADHD.
+JumpyBrain is your ADHD command centre — a web app (plus Chrome extension) that adapts to your current energy level and helps you figure out *what to do next*, without the decision paralysis that comes with ADHD.
 
 It is not just another to-do list. JumpyBrain actively:
 
@@ -53,7 +53,8 @@ It is not just another to-do list. JumpyBrain actively:
 | **Energy Control** | Rate your current energy (1–5) to get appropriately scoped task suggestions |
 | **Connectors** | Connect Gmail, Slack, and Google Calendar to sync tasks automatically |
 | **Chrome Extension** | Quick-add tasks, start timers, and get your next task without switching tabs |
-| **Dark / Light Theme** | Full dark and light mode support |
+| **Dark / Light Theme** | Premium dark mode (Linear-inspired) and clean light mode (Notion-inspired) with consistent JB Momentum identity |
+| **PWA / Installable** | Install directly from Chrome/Safari — works offline, home screen icon on Android and iOS |
 | **Push Notifications** | Browser push alerts for deadlines and reminders |
 
 ---
@@ -124,9 +125,14 @@ JumpyBrain/
 │   └── .env.example      # Environment variable template
 │
 ├── frontend/             # React + Vite web application
-│   ├── public/           # Static assets, audio files, service worker
+│   ├── public/           # Static assets, PWA icons, SVG logos, audio files
+│   │   ├── logo-icon.svg          # JB Momentum icon (vector, transparent bg)
+│   │   ├── favicon.svg            # Browser tab favicon
+│   │   ├── apple-touch-icon.png   # iOS home screen icon (180px)
+│   │   └── icons/                 # Full PWA icon set (16–512px, maskable)
 │   └── src/
 │       ├── components/   # All UI pages and widgets
+│       │   └── Logo.jsx  # JB Momentum SVG logo (icon / full / mono variants)
 │       ├── contexts/     # React contexts (user session, energy level)
 │       ├── hooks/        # Custom React hooks
 │       └── services/     # Axios API client
@@ -144,6 +150,9 @@ JumpyBrain/
 ### Frontend
 - **React 19** with React Router v7
 - **Vite** — fast dev server and bundler
+- **Tailwind CSS v3** — utility classes wired to CSS custom property design tokens
+- **vite-plugin-pwa** — auto-generates `manifest.webmanifest`, service worker, and PWA icon entries
+- **Framer Motion** — animation primitives
 - **Recharts** — weekly/monthly analytics charts
 - **Socket.io client** — real-time task and session updates
 
@@ -170,6 +179,28 @@ JumpyBrain/
 ---
 
 ## Getting Started (Developer Guide)
+
+### Design System
+
+JumpyBrain uses the **JB Momentum** brand identity. Design tokens live in
+`frontend/src/styles.css` as CSS custom properties. Key palette:
+
+| Token | Dark | Light |
+|---|---|---|
+| `--bg` | `#0f1020` | `#f4f4fe` |
+| `--surface` | `#1a1b2e` | `#ffffff` |
+| `--indigo` | `#6366f1` | (same) |
+| `--violet` | `#7c3aed` | (same) |
+| `--cyan` | `#06b6d4` | (same) |
+
+The reusable `<Logo>` component (`src/components/Logo.jsx`) renders the SVG
+monogram in four variants: `icon`, `full`, `mono-light`, `mono-dark`.
+
+PWA icons are pre-generated in `public/icons/`. If you modify the logo SVG,
+regenerate them by running the Playwright script at
+`scripts/generate-icons.mjs` (requires Chromium).
+
+---
 
 ### Prerequisites
 
@@ -326,6 +357,7 @@ Authentication uses **Bearer JWT** tokens. Pass `Authorization: Bearer <token>` 
 1. Fork the repository and create a feature branch.
 2. Make your changes and ensure `npm test` passes.
 3. Open a pull request with a clear description of what you changed and why.
+4. Keep color usage consistent with the design token system in `styles.css`. Add new colors as CSS custom properties; avoid hardcoded hex values in component files.
 
 Please keep pull requests focused — one feature or fix per PR makes review much faster.
 
