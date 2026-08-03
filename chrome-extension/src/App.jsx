@@ -75,7 +75,20 @@ export default function App() {
     <div className="popup">
       <header className="popup-header">
         <div className="popup-logo">
-          <div className="popup-logo-dot" />
+          <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="extG" x1="13" y1="17" x2="82" y2="80" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#7C3AED"/>
+                <stop offset="42%" stopColor="#6366F1"/>
+                <stop offset="100%" stopColor="#06B6D4"/>
+              </linearGradient>
+            </defs>
+            <circle cx="23" cy="23" r="5.5" fill="url(#extG)"/>
+            <path d="M 37 23 L 37 66 Q 37 80 20 80" stroke="url(#extG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M 55 23 L 55 80" stroke="url(#extG)" strokeWidth="8" strokeLinecap="round"/>
+            <path d="M 55 23 Q 78 23 78 38 Q 78 52 55 52" stroke="url(#extG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M 55 52 Q 82 52 82 66 Q 82 80 55 80" stroke="url(#extG)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
           JumpyBrain
         </div>
         <div className="flex items-center gap-2">

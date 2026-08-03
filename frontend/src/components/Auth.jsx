@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
+import Logo from "./Logo";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -99,23 +100,8 @@ export default function Auth() {
     <div className="auth-page">
       <form className="card auth-card" onSubmit={submit}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              background: "linear-gradient(135deg, var(--violet), #a855f7)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: 18,
-              color: "#fff",
-              margin: "0 auto 12px",
-              boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
-            }}
-          >
-            JB
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <Logo size={52} variant="icon" />
           </div>
           <div className="auth-title">JumpyBrain</div>
           <div className="auth-subtitle">
