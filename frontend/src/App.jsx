@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
+import Logo from "./components/Logo";
 import api from "./services/api";
 import Auth from "./components/Auth";
 import Home from "./components/Home";
@@ -155,10 +156,12 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
       <nav className={`sidebar${open ? " open" : ""}`} role="navigation" aria-label="Main navigation">
         {/* Brand */}
         <div className="sidebar-brand">
-          <div className="sidebar-logo" aria-hidden="true">JB</div>
+          <div className="sidebar-logo">
+            <Logo size={36} variant="icon" />
+          </div>
           <div>
-            <div className="sidebar-title">JumpyBrain</div>
-            <div className="sidebar-subtitle">ADHD Buddy</div>
+            <div className="sidebar-title">Jumpy<span>Brain</span></div>
+            <div className="sidebar-subtitle">Focus. Do more.</div>
           </div>
         </div>
 
@@ -265,7 +268,7 @@ function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
           </svg>
         </button>
         <div className="top-bar-brand">
-          <div className="sidebar-logo" style={{ width: 28, height: 28, fontSize: 12 }} aria-hidden="true">JB</div>
+          <Logo size={28} variant="icon" />
           <span className="top-bar-page-title">{pageTitle}</span>
         </div>
       </div>
