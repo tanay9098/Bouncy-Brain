@@ -1,10 +1,11 @@
 import React from 'react'
 
 const TABS = [
-  { id: 'next',  icon: '⚡', label: 'Next' },
-  { id: 'add',   icon: '＋', label: 'Task' },
-  { id: 'dump',  icon: '🧠', label: 'Dump' },
-  { id: 'timer', icon: '⏱', label: 'Timer' },
+  { id: 'next',     icon: '⚡', label: 'Next' },
+  { id: 'add',      icon: '＋', label: 'Task' },
+  { id: 'dump',     icon: '🧠', label: 'Dump' },
+  { id: 'timer',    icon: '⏱', label: 'Timer' },
+  { id: 'blocking', icon: '🛡', label: 'Block' },
 ]
 
 export default function NavBar({ active, onChange }) {
