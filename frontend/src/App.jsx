@@ -286,8 +286,8 @@ function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
   );
 }
 
-// Bottom nav for mobile (4 primary destinations + More)
-function BottomNav({ onMoreClick }) {
+// Bottom nav for mobile (4 primary destinations + Logout)
+function BottomNav({ onLogout }) {
   return (
     <nav className="bottom-nav" aria-label="Mobile navigation">
       {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
@@ -303,12 +303,11 @@ function BottomNav({ onMoreClick }) {
       ))}
       <button
         className="bottom-nav-item"
-        onClick={onMoreClick}
-        aria-label="More options"
-        aria-haspopup="dialog"
+        onClick={onLogout}
+        aria-label="Logout"
       >
-        <Icons.More />
-        <span>More</span>
+        <Icons.Logout />
+        <span>Logout</span>
       </button>
     </nav>
   );
@@ -538,7 +537,7 @@ export default function App() {
             </Routes>
           </main>
 
-          {user && <BottomNav onMoreClick={() => setMoreOpen(true)} />}
+          {user && <BottomNav onLogout={logout} />}
         </div>
         {user && (
           <MoreSheet
