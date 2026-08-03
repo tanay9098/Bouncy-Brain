@@ -20,6 +20,7 @@ const recommendationsRoutes = require('./routes/recommendations');
 const habitsRoutes = require('./routes/habits');
 const aiRoutes = require('./routes/ai');
 const integrationsRoutes = require('./routes/integrations');
+const blockingRoutes = require('./routes/blocking');
 
 const deadlineChecker = require('./jobs/deadlineChecker');
 const integrationSync  = require('./jobs/integrationSync');
@@ -104,6 +105,7 @@ app.use('/api/recommendations', recommendationsRoutes);
 app.use('/api/habits', habitsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/integrations', integrationsRoutes);
+app.use('/api/blocking', blockingRoutes);
 
 // health
 app.get('/ping', (req,res)=> res.json({ ok: true }));
