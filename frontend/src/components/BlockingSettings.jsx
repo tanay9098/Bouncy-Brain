@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { useBlockingStore } from "../stores/blockingStore";
-import { Capacitor } from "@capacitor/core";
-import { AppBlocker } from "../plugins/AppBlocker";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -151,262 +149,6 @@ function AddEntryRow({ onAdd, valuePlaceholder, labelPlaceholder }) {
   );
 }
 
-const isNative = Capacitor.isNativePlatform();
-const platform = Capacitor.getPlatform(); // 'android' | 'ios' | 'web'
-
-const PERM_LABEL = {
-  android: { usageStats: "Usage Access", accessibility: "Accessibility Service" },
-  ios:     { familyControls: "Family Controls" },
-};
-
-function permIcon(state) {
-  if (state === "granted") return { icon: "✓", color: "var(--green)" };
-  if (state === "denied")  return { icon: "✗", color: "var(--red)" };
-  return { icon: "?", color: "var(--amber)" };
-}
-
-function NativeBlockingPanel() {
-  const [perms, setPerms]       = useState(null);
-  const [nativeState, setNativeState] = useState(null);
-  const [busy, setBusy]         = useState(false);
-  const [notice, setNotice]     = useState(null);
-
-  async function refresh() {
-    const [p, s] = await Promise.all([
-      AppBlocker.checkPermissions(),
-      AppBlocker.getBlockingState(),
-    ]);
-    setPerms(p);
-    setNativeState(s);
-  }
-
-  useEffect(() => { refresh(); }, []);
-
-  function showNotice(text, type) {
-    setNotice({ text, type });
-    setTimeout(() => setNotice(null), 2500);
-  }
-
-  async function handleRequestPerms() {
-    setBusy(true);
-    try {
-      if (platform === "ios") {
-        await AppBlocker.requestFamilyControlsAuth();
-      } else {
-        await AppBlocker.requestPermissions();
-      }
-      await refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleStartStop() {
-    setBusy(true);
-    try {
-      if (nativeState?.active) {
-        await AppBlocker.stopBlocking();
-        showNotice("Blocking stopped", "success");
-      } else {
-        const res = await AppBlocker.startBlocking();
-        if (res.ok) showNotice("Blocking started", "success");
-        else showNotice("Could not start — check permissions", "error");
-      }
-      await refresh();
-    } catch (err) {
-      showNotice(err.message || "Native error", "error");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleSnooze(minutes) {
-    setBusy(true);
-    try {
-      await AppBlocker.snooze({ minutes });
-      showNotice(`Snoozed for ${minutes} min`, "success");
-      await refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const missingPerms = platform === "ios"
-    ? perms?.familyControls !== "granted"
-    : perms?.usageStats !== "granted" || perms?.accessibility !== "granted";
-
-  return (
-    <section className="profile-settings-card">
-      <div className="profile-settings-card-header">
-        <h2 className="profile-settings-card-title">
-          {platform === "ios" ? "📱 iOS" : "📱 Android"} Native Blocking
-        </h2>
-        <p className="profile-settings-card-desc">
-          Directly block apps on this device using OS-level APIs
-        </p>
-      </div>
-
-      {/* Permission status */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-        {platform === "android" && perms && (
-          <>
-            {[
-              { key: "usageStats",    label: "Usage Access" },
-              { key: "accessibility", label: "Accessibility Service" },
-            ].map(({ key, label }) => {
-              const { icon, color } = permIcon(perms[key]);
-              return (
-                <div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ color, fontWeight: 700, width: 14 }}>{icon}</span>
-                  <span style={{ fontSize: "var(--text-sm)", color: "var(--text-soft)" }}>
-                    {label}
-                  </span>
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginLeft: "auto" }}>
-                    {perms[key]}
-                  </span>
-                </div>
-              );
-            })}
-          </>
-        )}
-        {platform === "ios" && perms && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: permIcon(perms.familyControls).color, fontWeight: 700, width: 14 }}>
-              {permIcon(perms.familyControls).icon}
-            </span>
-            <span style={{ fontSize: "var(--text-sm)", color: "var(--text-soft)" }}>
-              Family Controls
-            </span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginLeft: "auto" }}>
-              {perms.familyControls}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Grant permissions */}
-      {missingPerms && (
-        <button
-          type="button"
-          className="profile-save-btn"
-          style={{ marginBottom: 12, width: "100%" }}
-          onClick={handleRequestPerms}
-          disabled={busy}
-        >
-          {platform === "ios" ? "Authorize Family Controls" : "Open Permission Settings"}
-        </button>
-      )}
-
-      {/* Blocking state + controls */}
-      {!missingPerms && nativeState && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 12px",
-              borderRadius: "var(--radius-sm)",
-              background: nativeState.active && !nativeState.snoozed
-                ? "var(--green-dim)"
-                : "var(--surface)",
-              border: `1px solid ${nativeState.active && !nativeState.snoozed
-                ? "var(--green)"
-                : "var(--border)"}`,
-              marginBottom: 12,
-            }}
-          >
-            <span style={{ fontSize: 18 }}>
-              {nativeState.snoozed ? "⏸" : nativeState.active ? "🛡️" : "⬜"}
-            </span>
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: 600,
-              color: nativeState.active && !nativeState.snoozed
-                ? "var(--green)"
-                : "var(--muted)",
-            }}>
-              {nativeState.snoozed
-                ? "Snoozed"
-                : nativeState.active
-                  ? "Blocking active"
-                  : "Blocking off"}
-            </span>
-            <button
-              type="button"
-              className="profile-save-btn"
-              style={{
-                marginLeft: "auto",
-                padding: "4px 14px",
-                fontSize: "var(--text-xs)",
-                background: nativeState.active ? "var(--red-dim)" : undefined,
-                color: nativeState.active ? "var(--red)" : undefined,
-                border: nativeState.active ? "1px solid var(--red)" : undefined,
-              }}
-              onClick={handleStartStop}
-              disabled={busy}
-            >
-              {nativeState.active ? "Stop" : "Start"}
-            </button>
-          </div>
-
-          {nativeState.active && !nativeState.snoozed && (
-            <div>
-              <p className="profile-form-label" style={{ marginBottom: 8 }}>Snooze blocking</p>
-              <div style={{ display: "flex", gap: 6 }}>
-                {[5, 15, 30].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => handleSnooze(m)}
-                    disabled={busy}
-                    style={{
-                      flex: 1,
-                      padding: "6px 0",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border)",
-                      background: "transparent",
-                      color: "var(--muted)",
-                      fontSize: "var(--text-xs)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {m} min
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {notice && (
-        <div
-          className={`profile-msg profile-msg--${notice.type}`}
-          style={{ marginTop: 10 }}
-        >
-          {notice.text}
-        </div>
-      )}
-
-      {platform === "android" && (
-        <p style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginTop: 12 }}>
-          <strong>App names in the blocklist</strong> must be Android package names
-          (e.g. <code>com.instagram.android</code>). Enter them in the "Package name"
-          field when adding an app above.
-        </p>
-      )}
-      {platform === "ios" && (
-        <p style={{ fontSize: "var(--text-xs)", color: "var(--muted)", marginTop: 12 }}>
-          iOS app selection uses the <strong>Family Activity Picker</strong>.
-          After granting Family Controls, the native picker will appear to choose
-          which apps to block.
-        </p>
-      )}
-    </section>
-  );
-}
-
 export default function BlockingSettings() {
   const { rules, loading, saving, setRules, setLoading, setSaving } = useBlockingStore();
   const [local, setLocal] = useState(null);
@@ -470,12 +212,6 @@ export default function BlockingSettings() {
       const data = await api.put("/blocking", local);
       setRules(data.rules);
       setLocal(data.rules);
-
-      // Push updated rules to native layer if running as a Capacitor app
-      if (isNative) {
-        await AppBlocker.setBlockingRules({ rules: data.rules }).catch(() => {});
-      }
-
       setMsg({ type: "success", text: "Blocking rules saved" });
       setTimeout(() => setMsg(null), 2500);
     } catch {
@@ -569,28 +305,23 @@ export default function BlockingSettings() {
               Add app names to block on mobile. Enforcement requires the native app (Phase 2).
             </p>
           </div>
-          {!isNative && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 8,
-                padding: "8px 12px",
-                background: "var(--amber-dim)",
-                borderRadius: "var(--radius-sm)",
-                marginBottom: 12,
-                border: "1px solid var(--amber)",
-              }}
-            >
-              <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
-              <p style={{ fontSize: "var(--text-xs)", color: "var(--text-soft)", margin: 0 }}>
-                App blocking requires the native app. Android uses{" "}
-                <strong>Accessibility Service</strong>; iOS uses{" "}
-                <strong>Family Controls</strong>. Rules saved here activate automatically
-                when you install the mobile app.
-              </p>
-            </div>
-          )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+              padding: "8px 12px",
+              background: "var(--amber-dim)",
+              borderRadius: "var(--radius-sm)",
+              marginBottom: 12,
+              border: "1px solid var(--amber)",
+            }}
+          >
+            <span style={{ fontSize: 14, marginTop: 1 }}>⚠️</span>
+            <p style={{ fontSize: "var(--text-xs)", color: "var(--text-soft)", margin: 0 }}>
+              App blocking on Android requires <strong>Accessibility Service</strong> permissions. iOS requires <strong>FamilyControls</strong>. Rules saved here will be used once the native app is available.
+            </p>
+          </div>
           <EntryList
             items={local.blockedApps}
             onRemove={(idx) => removeFromList("blockedApps", idx)}
@@ -685,9 +416,6 @@ export default function BlockingSettings() {
             </>
           )}
         </section>
-
-        {/* Native controls — only rendered when running as Android/iOS app */}
-        {isNative && <NativeBlockingPanel />}
 
         {/* Save */}
         {msg && (
