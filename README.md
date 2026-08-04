@@ -17,6 +17,7 @@ JumpyBrain is a productivity application built specifically for people with ADHD
   - [Running the Backend](#running-the-backend)
   - [Running the Frontend](#running-the-frontend)
   - [Loading the Chrome Extension](#loading-the-chrome-extension)
+  - [Building the Mobile App](#building-the-mobile-app)
 - [API Overview](#api-overview)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
@@ -91,11 +92,17 @@ On the **Today** page, tap **What's Next?** to get an AI recommendation for the 
 
 Go to **Focus Timer** and start a Pomodoro session for your chosen task. JumpyBrain logs your session time automatically.
 
-### Step 6 — Connect your tools (optional)
+### Step 6 — Set up Blocking Rules
+
+Go to **Blocking Rules** (under the "More" menu). Add the sites and apps that distract you, and optionally whitelist specific sites that should always stay accessible. You can turn blocking on manually, or set a schedule (e.g. weekdays 9am–5pm) so it activates automatically. Blocking also turns on automatically whenever you start a focus session.
+
+> Blocking a **site** is enforced by the Chrome extension on desktop. Blocking an **app** is enforced by the native Android/iOS app — installing the web app on your phone's home screen is not enough; see [Building the Mobile App](#building-the-mobile-app) below.
+
+### Step 7 — Connect your tools (optional)
 
 Go to **Connectors** and link Gmail, Slack, or Google Calendar. JumpyBrain will sync relevant items into your task list automatically every 30 minutes.
 
-### Step 7 — Check your Progress
+### Step 8 — Check your Progress
 
 The **Progress** page shows bar and line charts of your weekly and monthly performance — tasks completed, focus minutes, and your current streak.
 
@@ -107,6 +114,11 @@ Install the extension in Chrome and pin it to your toolbar. From any website you
 - Quick-add a new task
 - Start or stop a focus timer
 - Do a Brain Dump (capture thoughts without leaving the page)
+- Check blocking status, sync your blocklist, or snooze blocking for 5/15/30 minutes from the **Block** tab
+
+### Mobile App (Android / iOS)
+
+The native mobile app (built with Capacitor) adds app-level blocking on top of everything the web app already does. Once granted the required OS permissions (Usage Access + Accessibility on Android, Family Controls on iOS), starting a focus session or hitting your schedule window will send blocked apps straight back to your home screen. See [Building the Mobile App](#building-the-mobile-app) for setup.
 
 ---
 
@@ -117,8 +129,8 @@ JumpyBrain/
 ├── backend/              # Node.js / Express API server
 │   ├── jobs/             # Cron jobs (deadline checker, integration sync)
 │   ├── ml/               # Priority scoring model
-│   ├── models/           # Mongoose data models
-│   ├── routes/           # REST API route handlers
+│   ├── models/           # Mongoose data models (Task, Habit, BlockingRule, ...)
+│   ├── routes/           # REST API route handlers (tasks, habits, blocking, ...)
 │   ├── services/         # Gmail, Slack, Google Calendar integrations
 │   ├── utils/            # Email sender, web push helpers
 │   ├── server.js         # Entry point
@@ -135,11 +147,16 @@ JumpyBrain/
 │       │   └── Logo.jsx  # JB Momentum SVG logo (icon / full / mono variants)
 │       ├── contexts/     # React contexts (user session, energy level)
 │       ├── hooks/        # Custom React hooks
+│       ├── plugins/      # AppBlocker.ts Capacitor plugin interface + web fallback
+│       ├── stores/       # Zustand state stores (focus, blocking, timer, theme, ui)
 │       └── services/     # Axios API client
 │
 └── chrome-extension/     # React-based Chrome extension
+    ├── public/
+    │   └── blocked.html  # Standalone page shown when a blocked site is visited
     └── src/
-        ├── components/   # Extension popup panels
+        ├── background/service-worker.js  # Enforces site blocking via declarativeNetRequest
+        ├── components/   # Extension popup panels (incl. BlockingTab.jsx)
         └── utils/        # API client, socket, local storage helpers
 ```
 
@@ -155,6 +172,7 @@ JumpyBrain/
 - **Framer Motion** — animation primitives
 - **Recharts** — weekly/monthly analytics charts
 - **Socket.io client** — real-time task and session updates
+- **vite-plugin-pwa** — installable Progressive Web App support
 
 ### Backend
 - **Node.js + Express 5**
@@ -169,6 +187,12 @@ JumpyBrain/
 
 ### Chrome Extension
 - **React + Vite** — same stack as frontend, compiled to a Chrome MV3 extension
+- **chrome.declarativeNetRequest** — blocks/redirects distracting sites without a background page per-request cost
+
+### Mobile (Capacitor)
+- **Capacitor 6** — wraps the frontend web build into native Android and iOS app shells
+- **Android (Kotlin)** — `UsageStatsManager` (foreground-app polling) + `AccessibilityService` (instant app-launch detection) to block apps
+- **iOS (Swift)** — `FamilyControls` + `ManagedSettings` to shield apps and filter web content at the OS level
 
 ### Infrastructure
 - **Frontend** → Vercel
@@ -209,6 +233,8 @@ regenerate them by running the Playwright script at
 - A **MongoDB Atlas** account (or a local MongoDB instance)
 - A **Google Cloud** project with OAuth 2.0 credentials (for Google sign-in and integrations)
 - An **OpenAI API key** (for AI recommendations)
+- *(Optional, for mobile app blocking)* **Android Studio** — to build and run the Android app
+- *(Optional, for mobile app blocking)* **Xcode** + an **Apple Developer account** with the Family Controls entitlement approved — to build and run the iOS app (see [Building the Mobile App](#building-the-mobile-app))
 
 ### Environment Variables
 
@@ -285,6 +311,37 @@ Then in Chrome:
 
 The extension icon appears in your toolbar.
 
+### Building the Mobile App
+
+The mobile app is the `frontend/` web app wrapped in native Android/iOS shells via [Capacitor](https://capacitorjs.com), with a native plugin (`AppBlocker`) that adds OS-level app blocking. The web app builds and runs fine without ever touching this — only do this if you need to test or ship app blocking on a phone.
+
+```bash
+cd frontend
+npm install              # pulls in @capacitor/core, @capacitor/android, @capacitor/ios
+npm run build             # builds the web app into dist/
+```
+
+**First-time native project setup** (skip if `frontend/android/` or `frontend/ios/` already has a full native project):
+
+```bash
+npx cap add android
+npx cap add ios
+```
+
+**Android:**
+1. Merge the permissions and service declarations from `frontend/android/MANIFEST_ADDITIONS.xml` into `frontend/android/app/src/main/AndroidManifest.xml`.
+2. `npx cap sync android` to copy the latest web build in.
+3. `npx cap open android` to launch Android Studio, then Run.
+4. On-device, grant **Usage Access** and enable the **Accessibility Service** for JumpyBrain when prompted (Settings deep-links are provided in-app).
+
+**iOS:**
+1. Follow `frontend/ios/SETUP_NOTES.md` — add the FamilyControls, ManagedSettings, and DeviceActivity frameworks, enable the **Family Controls** and **App Groups** capabilities in Xcode, and request the `com.apple.developer.family-controls` entitlement from Apple (this can take time to be approved — request it early).
+2. `npx cap sync ios` to copy the latest web build in.
+3. `npx cap open ios` to launch Xcode, then Run.
+4. On first launch, the app will prompt for Family Controls authorization.
+
+After any change to `frontend/src`, re-run `npm run build && npx cap sync` before testing on-device.
+
 ### Running Tests
 
 ```bash
@@ -313,6 +370,8 @@ All routes are prefixed with `/api`.
 | `GET /api/stats/monthly` | Last 30 days of activity |
 | `GET /api/habits` | List habits |
 | `POST /api/habits` | Create a habit |
+| `GET /api/blocking` | Get the current user's blocking rules (sites, apps, whitelist, schedule) |
+| `PUT /api/blocking` | Update blocking rules |
 | `GET /api/recommendations/mindfulness` | Mindfulness suggestion by energy level |
 | `POST /api/integrations/connect` | Connect Gmail / Slack / Google Calendar |
 | `POST /api/push/subscribe` | Register for browser push notifications |
@@ -350,6 +409,11 @@ Authentication uses **Bearer JWT** tokens. Pass `Authorization: Bearer <token>` 
    - `VITE_GOOGLE_CLIENT_ID` — same value as `GOOGLE_CLIENT_ID` on Render
 4. Vercel will build and deploy automatically on every push to `main`.
 
+### Mobile Apps (Play Store / App Store)
+
+1. **Android**: Build a signed AAB via Android Studio (Build > Generate Signed Bundle) or `./gradlew bundleRelease`. Because the app requests Usage Access and Accessibility permissions, Google Play requires you to complete a [Permissions Declaration Form](https://support.google.com/googleplay/android-developer/answer/9214102) explaining why — do this before submitting, or the review will be rejected.
+2. **iOS**: Archive and upload via Xcode (Product > Archive) to App Store Connect. The `com.apple.developer.family-controls` entitlement must be approved by Apple *before* the build will pass App Review — request it well ahead of your submission date (see [Building the Mobile App](#building-the-mobile-app)).
+
 ---
 
 ## Contributing
@@ -360,6 +424,8 @@ Authentication uses **Bearer JWT** tokens. Pass `Authorization: Bearer <token>` 
 4. Keep color usage consistent with the design token system in `styles.css`. Add new colors as CSS custom properties; avoid hardcoded hex values in component files.
 
 Please keep pull requests focused — one feature or fix per PR makes review much faster.
+
+Changes under `frontend/android/` or `frontend/ios/` (Kotlin/Swift) aren't covered by `npm test` — build and run them in Android Studio / Xcode before opening a PR.
 
 ---
 
