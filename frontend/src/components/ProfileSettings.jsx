@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import { changePassword } from "../services/api";
 
@@ -109,6 +110,18 @@ export default function ProfileSettings({ onThemeChange }) {
           <h1 className="profile-settings-title">Profile &amp; Settings</h1>
           <p className="profile-settings-subtitle">Manage your account details and appearance</p>
         </div>
+
+        {/* Focus Shield quick access — mobile users land here from Profile too */}
+        <Link to="/blocking" className="profile-settings-card fs-quick-link">
+          <span className="fs-quick-link-icon" aria-hidden="true">🛡️</span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span className="profile-settings-card-title" style={{ display: "block" }}>Focus Shield</span>
+            <span className="profile-settings-card-desc" style={{ display: "block", marginTop: 2 }}>
+              Manage blocked & whitelisted websites
+            </span>
+          </span>
+          <span aria-hidden="true">→</span>
+        </Link>
 
         {/* Profile Info */}
         <section className="profile-settings-card">

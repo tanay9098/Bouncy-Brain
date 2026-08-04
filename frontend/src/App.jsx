@@ -12,7 +12,7 @@ import DeadlineTimer from "./components/DeadlineTimer";
 import Calendar from "./components/Calendar";
 import ConnectorsPage from "./components/ConnectorsPage";
 import ProfileSettings from "./components/ProfileSettings";
-import BlockingSettings from "./components/BlockingSettings";
+import FocusShieldPage from "./components/focus-shield/FocusShieldPage";
 import FocusOverlay from "./components/FocusOverlay";
 import EnergyControl from "./components/EnergyControl";
 import { useUser } from "./contexts/UserContext";
@@ -73,6 +73,12 @@ const Icons = {
       <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" />
     </svg>
   ),
+  Shield: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+      <path d="M9.5 12l1.8 1.8L15 10" />
+    </svg>
+  ),
   Plug: () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
       <path d="M12 22V12M5 12H19M8 12V7a4 4 0 018 0v5" />
@@ -103,10 +109,10 @@ const NAV_ITEMS = [
 
 // Secondary pages accessible from sidebar "More" section
 const SECONDARY_NAV = [
-  { to: "/focus",    label: "Focus Timer", icon: Icons.Focus },
+  { to: "/focus",    label: "Focus Timer",  icon: Icons.Focus },
+  { to: "/blocking", label: "Focus Shield", icon: Icons.Shield },
   { to: "/mindful",  label: "Mindfulness", icon: Icons.Today },
   { to: "/deadline", label: "Deadlines",   icon: Icons.Schedule },
-  { to: "/blocking", label: "Blocking Rules", icon: Icons.Settings },
   { to: "/settings", label: "Profile & Settings", icon: Icons.Profile },
 ];
 
@@ -243,7 +249,7 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
   );
 }
 
-function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
+function TopBar({ theme, setTheme, onMenuClick, onMoreClick, onLogout }) {
   const location = useLocation();
   const { user } = useUser();
   const currentNav = [...NAV_ITEMS, ...SECONDARY_NAV].find((n) =>
@@ -276,6 +282,14 @@ function TopBar({ theme, setTheme, onMenuClick, onLogout }) {
       </div>
 
       <div className="top-bar-right">
+        <button
+          className="top-bar-icon-btn top-bar-more-btn"
+          onClick={onMoreClick}
+          aria-label="More — Focus Timer, Focus Shield, Mindfulness, Deadlines"
+          title="More"
+        >
+          <Icons.More />
+        </button>
         <Link
           to="/connectors"
           className="top-bar-icon-btn"
@@ -553,6 +567,7 @@ export default function App() {
               theme={theme}
               setTheme={setTheme}
               onMenuClick={() => setSidebarOpen((o) => !o)}
+              onMoreClick={() => setMoreOpen((o) => !o)}
               onLogout={logout}
             />
           )}
@@ -568,7 +583,7 @@ export default function App() {
               <Route path="/deadline" element={<ProtectedRoute><DeadlineTimer /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
               <Route path="/connectors" element={<ProtectedRoute><ConnectorsPage /></ProtectedRoute>} />
-              <Route path="/blocking" element={<ProtectedRoute><BlockingSettings /></ProtectedRoute>} />
+              <Route path="/blocking" element={<ProtectedRoute><FocusShieldPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><ProfileSettings onThemeChange={setTheme} /></ProtectedRoute>} />
             </Routes>
           </main>

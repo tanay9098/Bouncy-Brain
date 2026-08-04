@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import api from "../services/api";
 import { setFocusActive, getDistractionCount, resetDistractionCount } from "./FocusOverlay";
 import Affirmations from "./Affirmations";
+import ShieldStatusCard from "./focus-shield/ShieldStatusCard";
+import { useBlockingStore } from "../stores/blockingStore";
 
 const CIRCUMFERENCE = 2 * Math.PI * 90;
 
@@ -11,6 +13,7 @@ const MODES = [
 ];
 
 export default function FocusTimer() {
+  const { rules: shieldRules, loading: shieldLoading, setRules: setShieldRules, setLoading: setShieldLoading } = useBlockingStore();
   const [modeIdx, setModeIdx] = useState(0);
   const [workMins, setWorkMins] = useState(25);
   const [breakMins, setBreakMins] = useState(5);
@@ -35,6 +38,14 @@ export default function FocusTimer() {
   const linkedTask = tasks.find((t) => t._id === linkedTaskId) || null;
 
   useEffect(() => { loadTasks(); }, []);
+
+  useEffect(() => {
+    setShieldLoading(true);
+    api.get("/blocking")
+      .then((data) => setShieldRules(data.rules))
+      .catch(() => {})
+      .finally(() => setShieldLoading(false));
+  }, []);
 
   async function loadTasks() {
     setTasksLoading(true);
@@ -267,6 +278,13 @@ export default function FocusTimer() {
               checks won't trigger it.
             </div>
           </div>
+
+          <ShieldStatusCard
+            rules={shieldRules}
+            loading={shieldLoading}
+            sessionActive={active && isWork}
+            variant="session"
+          />
 
           <div className="card">
             <div className="card-title">Affirmation</div>

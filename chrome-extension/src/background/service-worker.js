@@ -55,7 +55,7 @@ async function applyBlockingRules(blockedSites, whitelist) {
   const removeRuleIds = existing.map((r) => r.id);
   const addRules     = [];
 
-  (blockedSites || []).slice(0, 500).forEach((site, i) => {
+  (blockedSites || []).filter((s) => s.enabled !== false).slice(0, 500).forEach((site, i) => {
     const domain = (site.value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (!domain) return;
     addRules.push({
@@ -72,7 +72,7 @@ async function applyBlockingRules(blockedSites, whitelist) {
     });
   });
 
-  (whitelist || []).slice(0, 500).forEach((site, i) => {
+  (whitelist || []).filter((s) => s.enabled !== false).slice(0, 500).forEach((site, i) => {
     const domain = (site.value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     if (!domain) return;
     addRules.push({
@@ -112,6 +112,12 @@ async function evaluateAndApplyRules(rules) {
   // Check snooze — temporarily suppresses blocking
   const { blockingSnoozeUntil } = await chrome.storage.local.get('blockingSnoozeUntil');
   if (blockingSnoozeUntil && Date.now() < blockingSnoozeUntil) {
+    await clearBlockingRules();
+    return;
+  }
+
+  // Check account-level pause (set from the JumpyBrain app's Focus Shield page, synced via the API)
+  if (rules.pausedUntil && Date.now() < new Date(rules.pausedUntil).getTime()) {
     await clearBlockingRules();
     return;
   }

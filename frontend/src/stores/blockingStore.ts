@@ -4,6 +4,8 @@ export interface BlockEntry {
   _id?: string
   value: string
   label: string
+  enabled?: boolean
+  notes?: string
 }
 
 export interface BlockingSchedule {
@@ -19,6 +21,7 @@ export interface BlockingRules {
   blockedApps: BlockEntry[]
   whitelist: BlockEntry[]
   schedule: BlockingSchedule
+  pausedUntil?: string | null
 }
 
 interface BlockingState {
@@ -41,6 +44,7 @@ const DEFAULT_RULES: BlockingRules = {
     endTime: '17:00',
     days: [1, 2, 3, 4, 5],
   },
+  pausedUntil: null,
 }
 
 export const useBlockingStore = create<BlockingState>((set) => ({
