@@ -282,12 +282,12 @@ export default function FocusShieldPage() {
           emptyBody="Add sites you always need — like docs or your work tools — so they're never blocked by mistake."
         />
 
-        {/* Blocked apps (mobile, phase 2) */}
+        {/* Blocked apps (mobile) */}
         <section className="profile-settings-card">
           <div className="profile-settings-card-header">
             <h2 className="profile-settings-card-title">Blocked Apps</h2>
             <p className="profile-settings-card-desc">
-              Add app names to block on mobile. Enforcement requires the native app (Phase 2).
+              Add app names to block on mobile. Enforcement requires the native app.
             </p>
           </div>
           <div className="fs-notice">
