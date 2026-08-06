@@ -4,10 +4,13 @@ import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useEnergy } from "../contexts/EnergyContext";
 import EnergyControl from "./EnergyControl";
+import ShieldStatusCard from "./focus-shield/ShieldStatusCard";
+import { useBlockingStore } from "../stores/blockingStore";
 
 export default function Home() {
   const { user } = useUser();
   const { energy } = useEnergy();
+  const { rules: shieldRules, loading: shieldLoading, setRules: setShieldRules, setLoading: setShieldLoading } = useBlockingStore();
   const [daily, setDaily] = useState({ tasksCompleted: 0, totalSessionMins: 0 });
   const [whatNext, setWhatNext] = useState(null);
   const [loadingNext, setLoadingNext] = useState(false);
@@ -22,6 +25,14 @@ export default function Home() {
     loadStats();
     loadWhatNext();
   }, [energy]);
+
+  useEffect(() => {
+    setShieldLoading(true);
+    api.get("/blocking")
+      .then((data) => setShieldRules(data.rules))
+      .catch(() => {})
+      .finally(() => setShieldLoading(false));
+  }, []);
 
   async function loadStats() {
     try {
@@ -172,9 +183,9 @@ export default function Home() {
                   🧠 Brain Dump → Tasks
                 </button>
               </Link>
-              <Link to="/mindful" style={{ textDecoration: "none" }}>
+              <Link to="/blocking" style={{ textDecoration: "none" }}>
                 <button className="btn btn-ghost w-full">
-                  🧘 Mindfulness
+                  🛡️ Manage Focus Shield
                 </button>
               </Link>
               <Link to="/dashboard" style={{ textDecoration: "none" }}>
@@ -184,6 +195,8 @@ export default function Home() {
               </Link>
             </div>
           </div>
+
+          <ShieldStatusCard rules={shieldRules} loading={shieldLoading} variant="dashboard" />
 
           <div className="card">
             <div className="card-title">Daily tip</div>

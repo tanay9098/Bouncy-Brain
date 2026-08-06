@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const entrySchema = new mongoose.Schema({
   value: { type: String, required: true },
   label: { type: String, default: '' },
+  enabled: { type: Boolean, default: true },
+  notes: { type: String, default: '' },
 });
 
 const scheduleSchema = new mongoose.Schema({
@@ -19,6 +21,7 @@ const blockingRuleSchema = new mongoose.Schema({
   blockedApps: { type: [entrySchema], default: [] },
   whitelist: { type: [entrySchema], default: [] },
   schedule: { type: scheduleSchema, default: () => ({}) },
+  pausedUntil: { type: Date, default: null },
   updatedAt: { type: Date, default: Date.now },
 });
 

@@ -20,7 +20,12 @@ function sanitizeEntry(e) {
   if (!e || typeof e.value !== 'string') return null;
   const value = e.value.trim().toLowerCase();
   if (!value) return null;
-  return { value, label: typeof e.label === 'string' ? e.label.trim().slice(0, 100) : '' };
+  return {
+    value,
+    label: typeof e.label === 'string' ? e.label.trim().slice(0, 100) : '',
+    enabled: typeof e.enabled === 'boolean' ? e.enabled : true,
+    notes: typeof e.notes === 'string' ? e.notes.trim().slice(0, 300) : '',
+  };
 }
 
 // GET /api/blocking
@@ -60,6 +65,15 @@ router.put('/', auth, async (req, res) => {
         endTime: typeof schedule.endTime === 'string' ? schedule.endTime : '17:00',
         days: Array.isArray(schedule.days) ? schedule.days.filter((d) => d >= 0 && d <= 6) : [1, 2, 3, 4, 5],
       };
+    }
+
+    if ('pausedUntil' in req.body) {
+      const p = req.body.pausedUntil;
+      if (!p) update.pausedUntil = null;
+      else {
+        const d = new Date(p);
+        update.pausedUntil = Number.isNaN(d.getTime()) ? null : d;
+      }
     }
 
     const rules = await BlockingRule.findOneAndUpdate(
