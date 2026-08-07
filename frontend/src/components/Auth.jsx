@@ -58,10 +58,6 @@ export default function Auth() {
       setError("Google Sign-In is not available. Please try again later.");
       return;
     }
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-    });
     window.google.accounts.id.prompt();
   }
 
