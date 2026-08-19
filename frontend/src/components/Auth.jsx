@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import api from "../services/api";
 import { useUser } from "../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -40,14 +40,28 @@ export default function Auth() {
     }
   }, [isLogin]);
 
-  // Initialise Google Identity Services
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !window.google) return;
+  const gsiInitializedRef = useRef(false);
+
+  const initGoogleIdentity = useCallback(() => {
+    if (!GOOGLE_CLIENT_ID || !window.google) return false;
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleCredential,
     });
-  }, [isLogin, handleGoogleCredential]);
+    gsiInitializedRef.current = true;
+    return true;
+  }, [handleGoogleCredential]);
+
+  // Initialise Google Identity Services as soon as the script is ready.
+  // The script tag loads with `async defer`, so it may not be available yet
+  // on mount — poll briefly instead of giving up after a single check.
+  useEffect(() => {
+    if (initGoogleIdentity()) return;
+    const interval = setInterval(() => {
+      if (initGoogleIdentity()) clearInterval(interval);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [initGoogleIdentity]);
 
   function launchGoogleOneTap() {
     if (!GOOGLE_CLIENT_ID) {
@@ -55,6 +69,12 @@ export default function Auth() {
       return;
     }
     if (!window.google) {
+      setError("Google Sign-In is not available. Please try again later.");
+      return;
+    }
+    // Fall back to a just-in-time init in case the polling above hasn't
+    // caught up yet (e.g. the script finished loading between renders).
+    if (!gsiInitializedRef.current && !initGoogleIdentity()) {
       setError("Google Sign-In is not available. Please try again later.");
       return;
     }
