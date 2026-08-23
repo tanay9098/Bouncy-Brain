@@ -32,16 +32,16 @@ export const api = {
   delete: (path) => request(path, { method: 'DELETE' }),
 };
 
-export async function login(email, password) {
+export async function googleLogin(idToken) {
   const base = await getApiUrl();
-  const res = await fetch(`${base}/auth/login`, {
+  const res = await fetch(`${base}/auth/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ idToken }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || 'Login failed');
+    throw new Error(body.error || 'Google sign-in failed');
   }
   return res.json();
 }

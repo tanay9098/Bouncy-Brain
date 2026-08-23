@@ -311,6 +311,8 @@ Then in Chrome:
 
 The extension icon appears in your toolbar.
 
+The extension signs in with Google, same as the web app. Set `VITE_GOOGLE_CLIENT_ID` (same value as `GOOGLE_CLIENT_ID` above) before running `npm run build`, and add `https://<extension-id>.chromiumapp.org/` as an authorized redirect URI on that OAuth client in Google Cloud Console — the extension ID is shown on the `chrome://extensions` card after loading it unpacked once.
+
 ### Building the Mobile App
 
 The mobile app is the `frontend/` web app wrapped in native Android/iOS shells via [Capacitor](https://capacitorjs.com), with a native plugin (`AppBlocker`) that adds OS-level app blocking. The web app builds and runs fine without ever touching this — only do this if you need to test or ship app blocking on a phone.

@@ -27,12 +27,7 @@ const userSchema = new mongoose.Schema({
     enum: ['dark', 'light'],
     default: 'dark',
   },
-  passwordHash: { type: String, default: null },
-  authProviders: {
-    type: [{ type: String, enum: ['EMAIL_PASSWORD', 'GOOGLE'] }],
-    default: [],
-  },
-  googleId: { type: String, default: null },
+  googleId: { type: String, required: true, unique: true },
   integrations: {
     gmail: { type: integrationSchema, default: () => ({}) },
     gcal:  { type: integrationSchema, default: () => ({}) },

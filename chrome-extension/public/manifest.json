@@ -3,7 +3,7 @@
   "name": "JumpyBrain",
   "version": "1.0.0",
   "description": "ADHD productivity companion — tasks, focus timer, and smart ML recommendations in your browser.",
-  "permissions": ["storage", "alarms", "notifications", "declarativeNetRequest", "tabs"],
+  "permissions": ["storage", "alarms", "notifications", "declarativeNetRequest", "tabs", "identity"],
   "host_permissions": [
     "http://localhost:4000/*",
     "https://*.railway.app/*",
