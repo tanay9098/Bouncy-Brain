@@ -8,37 +8,29 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function Auth() {
   const { setUser, setToken } = useUser();
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [errorCode, setErrorCode] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleGoogleCredential = useCallback(async (response) => {
     setGoogleLoading(true);
     setError("");
-    setErrorCode("");
     try {
       const data = await api.post("/auth/google", { idToken: response.credential });
       setUser(data.user);
       setToken(data.token);
       navigate("/");
     } catch (err) {
-      const code = err.response?.data?.code || "";
       const msg =
         err.response?.data?.error ||
         err.response?.data?.message ||
         err.message ||
         "Google sign-in failed";
       setError(msg);
-      setErrorCode(code);
     } finally {
       setGoogleLoading(false);
     }
-  }, [isLogin]);
+  }, [navigate, setUser, setToken]);
 
   const gsiInitializedRef = useRef(false);
 
@@ -81,51 +73,17 @@ export default function Auth() {
     window.google.accounts.id.prompt();
   }
 
-  async function submit(e) {
-    e.preventDefault();
-    setError("");
-    setErrorCode("");
-    try {
-      const path = isLogin ? "/auth/login" : "/auth/signup";
-      const body = isLogin
-        ? { email: email.trim(), password }
-        : { email: email.trim(), password, name: name.trim() };
-      const data = await api.post(path, body);
-      setUser(data.user);
-      setToken(data.token);
-      navigate("/");
-    } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          err.response?.data?.message ||
-          err.message ||
-          "Something went wrong"
-      );
-    }
-  }
-
-  function switchMode() {
-    setIsLogin(!isLogin);
-    setError("");
-    setErrorCode("");
-  }
-
-  const isEmailAccountExists = errorCode === "EMAIL_ACCOUNT_EXISTS";
-
   return (
     <div className="auth-page">
-      <form className="card auth-card" onSubmit={submit}>
+      <div className="card auth-card">
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
             <Logo size={52} variant="icon" />
           </div>
           <div className="auth-title">JumpyBrain</div>
-          <div className="auth-subtitle">
-            {isLogin ? "Welcome back" : "Create your account"}
-          </div>
+          <div className="auth-subtitle">Sign in to continue</div>
         </div>
 
-        {/* Google Sign-In Button */}
         <button
           type="button"
           onClick={launchGoogleOneTap}
@@ -145,7 +103,6 @@ export default function Auth() {
             fontWeight: 600,
             cursor: googleLoading ? "not-allowed" : "pointer",
             opacity: googleLoading ? 0.6 : 1,
-            marginBottom: 12,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -154,113 +111,24 @@ export default function Auth() {
             <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
             <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
           </svg>
-          {googleLoading
-            ? "Signing in..."
-            : isLogin
-            ? "Continue with Google"
-            : "Sign up with Google"}
+          {googleLoading ? "Signing in..." : "Continue with Google"}
         </button>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 12,
-            color: "var(--text-muted)",
-            fontSize: 12,
-          }}
-        >
-          <hr style={{ flex: 1, border: "none", borderTop: "1px solid var(--border)" }} />
-          or
-          <hr style={{ flex: 1, border: "none", borderTop: "1px solid var(--border)" }} />
-        </div>
-
-        {!isLogin && (
-          <input
-            className="input mb-3"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        )}
-
-        <input
-          className="input mb-3"
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <input
-          className="input mb-3"
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
 
         {error && (
           <div
             style={{
+              marginTop: 12,
               padding: "10px 14px",
               borderRadius: "var(--radius-sm)",
               background: "var(--red-dim)",
               color: "var(--red)",
               fontSize: 13,
-              marginBottom: 12,
             }}
           >
             {error}
-            {isEmailAccountExists && (
-              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-                <button
-                  type="button"
-                  onClick={() => { setIsLogin(true); setError(""); setErrorCode(""); }}
-                  style={{
-                    background: "var(--red)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "6px 12px",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Go to Sign In
-                </button>
-                <a
-                  href="mailto:?subject=Reset Password"
-                  style={{ color: "var(--red)", fontSize: 12, textDecoration: "underline" }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setError("Please use the email you registered with and your password to sign in, then visit account settings to reset your password.");
-                    setErrorCode("");
-                  }}
-                >
-                  Reset Password
-                </a>
-              </div>
-            )}
           </div>
         )}
-
-        <button className="btn btn-primary w-full" type="submit">
-          {isLogin ? "Log in" : "Create account"}
-        </button>
-
-        <div className="auth-switch">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <span className="auth-link" onClick={switchMode}>
-            {isLogin ? "Sign up" : "Log in"}
-          </span>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

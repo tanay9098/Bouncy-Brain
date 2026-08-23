@@ -1,7 +1,6 @@
 /**
- * Google Auth integration tests
+ * Google Auth integration tests (Google is the only supported sign-in method)
  * Run with: node --test tests/auth.google.test.js
- * Requires: npm install --save-dev @jest/globals (or use node:test)
  */
 const assert = require('node:assert/strict');
 const { describe, it, before, after, mock } = require('node:test');
@@ -54,7 +53,7 @@ async function post(path, body) {
 }
 
 describe('POST /auth/google', () => {
-  it('Scenario 1: creates new user when no account exists', async () => {
+  it('creates a new user when no account exists', async () => {
     mockVerifyIdToken.mock.mockImplementationOnce(() =>
       Promise.resolve(fakeTicket('newuser@example.com', 'google-id-1'))
     );
@@ -65,7 +64,7 @@ describe('POST /auth/google', () => {
     assert.equal(res.body.isNewUser, true);
   });
 
-  it('Scenario 2: signs in existing Google-linked account', async () => {
+  it('signs in an existing account on subsequent logins', async () => {
     mockVerifyIdToken.mock.mockImplementationOnce(() =>
       Promise.resolve(fakeTicket('newuser@example.com', 'google-id-1'))
     );
@@ -74,23 +73,6 @@ describe('POST /auth/google', () => {
     assert.equal(res.body.user.email, 'newuser@example.com');
     assert.ok(res.body.token);
     assert.equal(res.body.isNewUser, undefined);
-  });
-
-  it('Scenario 3 & 4: blocks Google auth when email belongs to email/password account', async () => {
-    // First create an email/password account
-    await post('/auth/signup', {
-      email: 'existing@example.com',
-      password: 'Password1',
-      name: 'Existing User',
-    });
-
-    mockVerifyIdToken.mock.mockImplementationOnce(() =>
-      Promise.resolve(fakeTicket('existing@example.com', 'google-id-2'))
-    );
-    const res = await post('/auth/google', { idToken: 'valid-token' });
-    assert.equal(res.status, 409);
-    assert.equal(res.body.code, 'EMAIL_ACCOUNT_EXISTS');
-    assert.ok(res.body.error.includes('email and password'));
   });
 
   it('returns 401 for invalid Google token', async () => {
@@ -112,22 +94,5 @@ describe('POST /auth/google', () => {
     );
     const res = await post('/auth/google', { idToken: 'valid-token' });
     assert.equal(res.status, 400);
-  });
-});
-
-describe('POST /auth/login with Google-only accounts', () => {
-  it('returns clear error when Google-only user tries password login', async () => {
-    // Create a Google-only account first
-    mockVerifyIdToken.mock.mockImplementationOnce(() =>
-      Promise.resolve(fakeTicket('googleonly@example.com', 'google-id-4'))
-    );
-    await post('/auth/google', { idToken: 'valid-token' });
-
-    const res = await post('/auth/login', {
-      email: 'googleonly@example.com',
-      password: 'anypassword',
-    });
-    assert.equal(res.status, 400);
-    assert.equal(res.body.code, 'GOOGLE_ACCOUNT_NO_PASSWORD');
   });
 });

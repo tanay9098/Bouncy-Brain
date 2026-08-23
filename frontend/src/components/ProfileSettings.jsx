@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
-import { changePassword } from "../services/api";
 
 const GENDER_OPTIONS = [
   { value: "", label: "Prefer not to say" },
@@ -37,10 +36,6 @@ export default function ProfileSettings({ onThemeChange }) {
   const [selectedTheme, setSelectedTheme] = useState(user?.preferredTheme || "dark");
   const [themeSaving, setThemeSaving] = useState(false);
   const [themeMsg, setThemeMsg] = useState(null);
-
-  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMsg, setPwMsg] = useState(null);
 
   async function handleProfileSave(e) {
     e.preventDefault();
@@ -80,28 +75,6 @@ export default function ProfileSettings({ onThemeChange }) {
     setSelectedTheme(theme);
     handleThemeSave(theme);
   }
-
-  async function handlePasswordSave(e) {
-    e.preventDefault();
-    setPwMsg(null);
-    if (pwForm.newPassword !== pwForm.confirmPassword) {
-      setPwMsg({ type: "error", text: "New passwords do not match" });
-      return;
-    }
-    setPwSaving(true);
-    try {
-      await changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
-      setPwMsg({ type: "success", text: "Password changed successfully" });
-      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (err) {
-      const msg = err?.response?.data?.error || "Failed to change password";
-      setPwMsg({ type: "error", text: msg });
-    } finally {
-      setPwSaving(false);
-    }
-  }
-
-  const hasPassword = user?.authProviders?.includes?.("EMAIL_PASSWORD");
 
   return (
     <div className="profile-settings-page">
@@ -255,74 +228,6 @@ export default function ProfileSettings({ onThemeChange }) {
           )}
         </section>
 
-        {/* Change Password — only shown for email/password accounts */}
-        {hasPassword && (
-          <section className="profile-settings-card">
-            <div className="profile-settings-card-header">
-              <h2 className="profile-settings-card-title">Change Password</h2>
-              <p className="profile-settings-card-desc">Use a strong password with letters and numbers</p>
-            </div>
-
-            <form onSubmit={handlePasswordSave} className="profile-form">
-              <div className="profile-form-grid profile-form-grid--single">
-                <div className="profile-form-field">
-                  <label className="profile-form-label" htmlFor="ps-cur-pw">Current Password</label>
-                  <input
-                    id="ps-cur-pw"
-                    className="profile-form-input"
-                    type="password"
-                    value={pwForm.currentPassword}
-                    onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
-                    placeholder="Enter current password"
-                    autoComplete="current-password"
-                  />
-                </div>
-
-                <div className="profile-form-field">
-                  <label className="profile-form-label" htmlFor="ps-new-pw">New Password</label>
-                  <input
-                    id="ps-new-pw"
-                    className="profile-form-input"
-                    type="password"
-                    value={pwForm.newPassword}
-                    onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
-                    placeholder="Min 8 chars, include a number"
-                    autoComplete="new-password"
-                  />
-                </div>
-
-                <div className="profile-form-field">
-                  <label className="profile-form-label" htmlFor="ps-confirm-pw">Confirm New Password</label>
-                  <input
-                    id="ps-confirm-pw"
-                    className="profile-form-input"
-                    type="password"
-                    value={pwForm.confirmPassword}
-                    onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                    placeholder="Repeat new password"
-                    autoComplete="new-password"
-                  />
-                </div>
-              </div>
-
-              {pwMsg && (
-                <div className={`profile-msg profile-msg--${pwMsg.type}`}>
-                  {pwMsg.text}
-                </div>
-              )}
-
-              <div className="profile-form-actions">
-                <button
-                  type="submit"
-                  className="profile-save-btn"
-                  disabled={pwSaving}
-                >
-                  {pwSaving ? "Saving…" : "Change Password"}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
       </div>
     </div>
   );

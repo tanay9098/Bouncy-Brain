@@ -36,7 +36,5 @@ api.interceptors.response.use(
 export const getProfile = () => api.get('/profile')
 export const updateProfile = (data: { name?: string; gender?: string; email?: string; preferredTheme?: string }) =>
   api.put('/profile', data)
-export const changePassword = (data: { currentPassword: string; newPassword: string }) =>
-  api.put('/profile/password', data)
 
 export default api

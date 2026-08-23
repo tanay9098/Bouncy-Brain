@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 function auth(req, res, next) {
@@ -19,7 +18,7 @@ function auth(req, res, next) {
 
 // GET /api/profile — return current user profile
 router.get('/', auth, async (req, res) => {
-  const user = await User.findById(req.userId).select('-passwordHash -googleId -integrations -authProviders');
+  const user = await User.findById(req.userId).select('-googleId -integrations');
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme });
 });
@@ -70,36 +69,6 @@ router.put('/', auth, async (req, res) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   res.json({ id: user._id, email: user.email, name: user.name, gender: user.gender, preferredTheme: user.preferredTheme });
-});
-
-// PUT /api/profile/password — change password
-router.put('/password', auth, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'currentPassword and newPassword are required' });
-  }
-
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'New password must be at least 8 characters' });
-  }
-  if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-    return res.status(400).json({ error: 'New password must contain at least one letter and one number' });
-  }
-
-  const user = await User.findById(req.userId);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-
-  if (!user.passwordHash) {
-    return res.status(400).json({ error: 'This account uses Google sign-in and has no password to change' });
-  }
-
-  const ok = await bcrypt.compare(currentPassword, user.passwordHash);
-  if (!ok) return res.status(400).json({ error: 'Current password is incorrect' });
-
-  user.passwordHash = await bcrypt.hash(newPassword, 10);
-  await user.save();
-
-  res.json({ message: 'Password updated successfully' });
 });
 
 module.exports = router;

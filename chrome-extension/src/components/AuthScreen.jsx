@@ -1,25 +1,26 @@
 import React, { useState } from 'react'
-import { login } from '../utils/api.js'
+import { googleLogin } from '../utils/api.js'
+import { signInWithGoogle } from '../utils/googleAuth.js'
 import { set } from '../utils/storage.js'
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
 export default function AuthScreen({ onLogin }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [apiUrl, setApiUrl] = useState('http://localhost:4000/api')
   const [showConfig, setShowConfig] = useState(false)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleGoogleSignIn() {
     setError('')
     setLoading(true)
     try {
       await set({ apiUrl })
-      const data = await login(email, password)
+      const idToken = await signInWithGoogle(GOOGLE_CLIENT_ID)
+      const data = await googleLogin(idToken)
       onLogin(data.token || data.accessToken, data.user)
     } catch (err) {
-      setError(err.message === 'UNAUTHORIZED' ? 'Invalid email or password.' : err.message)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -30,36 +31,11 @@ export default function AuthScreen({ onLogin }) {
       <div className="auth-logo">JB</div>
       <div className="auth-sub">Sign in to JumpyBrain</div>
 
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <div className="auth-form">
         {error && <div className="error-msg">{error}</div>}
 
-        <div className="form-group">
-          <label className="label">Email</label>
-          <input
-            className="input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            autoFocus
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="label">Password</label>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-          />
-        </div>
-
-        <button className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign In'}
+        <button className="btn btn-primary btn-block" onClick={handleGoogleSignIn} disabled={loading}>
+          {loading ? 'Signing in…' : 'Continue with Google'}
         </button>
 
         <button
@@ -83,7 +59,7 @@ export default function AuthScreen({ onLogin }) {
             />
           </div>
         )}
-      </form>
+      </div>
     </div>
   )
 }
