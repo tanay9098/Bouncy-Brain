@@ -170,6 +170,45 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   return true;
 });
 
+// ── External auth sync (from the JumpyBrain web app) ───────────────────────────
+// Only origins listed in manifest.json's "externally_connectable.matches" ever
+// reach this listener — Chrome enforces that before delivery. We re-derive the
+// same list here and re-check sender.origin as defense-in-depth, so the two
+// never drift out of sync and a stray origin can't silently start working.
+
+function trustedAuthOrigins() {
+  const matches = chrome.runtime.getManifest().externally_connectable?.matches || [];
+  return new Set(matches.map((m) => m.replace(/\/\*$/, '')));
+}
+
+chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
+  if (!trustedAuthOrigins().has(sender.origin)) {
+    sendResponse({ error: 'Untrusted origin' });
+    return;
+  }
+
+  if (msg?.type === 'SET_AUTH') {
+    const { authToken, apiUrl, user } = msg.payload || {};
+    if (!authToken || !apiUrl) {
+      sendResponse({ error: 'Missing authToken or apiUrl' });
+      return;
+    }
+    chrome.storage.local.set({ authToken, apiUrl, user: user || null })
+      .then(syncAndApplyRules)
+      .then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
+  if (msg?.type === 'CLEAR_AUTH') {
+    chrome.storage.local.remove(['authToken', 'apiUrl', 'user'])
+      .then(clearBlockingRules)
+      .then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
+  sendResponse({ error: 'Unknown message type' });
+});
+
 async function handleMessage({ type, payload }) {
   switch (type) {
 

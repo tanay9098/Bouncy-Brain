@@ -17,6 +17,7 @@ JumpyBrain is a productivity application built specifically for people with ADHD
   - [Running the Backend](#running-the-backend)
   - [Running the Frontend](#running-the-frontend)
   - [Loading the Chrome Extension](#loading-the-chrome-extension)
+  - [Syncing auth with the Chrome extension](#syncing-auth-with-the-chrome-extension)
   - [Building the Mobile App](#building-the-mobile-app)
 - [API Overview](#api-overview)
 - [Deployment](#deployment)
@@ -273,6 +274,7 @@ cp backend/.env.example backend/.env
 | `VITE_API_URL` | Full URL of the backend API (e.g. `https://your-backend.onrender.com`) |
 | `VITE_VAPID_PUBLIC_KEY` | Same value as `VAPID_PUBLIC_KEY` above |
 | `VITE_GOOGLE_CLIENT_ID` | Same value as `GOOGLE_CLIENT_ID` above |
+| `VITE_EXTENSION_ID` | *(Optional)* The Chrome extension's ID (shown on its card at `chrome://extensions`). When set, the web app pushes your login into the extension automatically on sign-in/sign-out — see [Syncing auth with the Chrome extension](#syncing-auth-with-the-chrome-extension). Leave unset and the extension just keeps its own separate Google sign-in. |
 
 ### Running the Backend
 
@@ -312,6 +314,17 @@ Then in Chrome:
 The extension icon appears in your toolbar.
 
 The extension signs in with Google, same as the web app. Set `VITE_GOOGLE_CLIENT_ID` (same value as `GOOGLE_CLIENT_ID` above) before running `npm run build`, and add `https://<extension-id>.chromiumapp.org/` as an authorized redirect URI on that OAuth client in Google Cloud Console — the extension ID is shown on the `chrome://extensions` card after loading it unpacked once.
+
+### Syncing auth with the Chrome extension
+
+By default the web app and the extension are two independent logins — each does its own Google sign-in. Once you know the extension's ID (from `chrome://extensions`, after loading it unpacked at least once), you can make the web app push your session into the extension automatically so users only sign in once:
+
+1. Set `VITE_EXTENSION_ID` (see [Environment Variables](#environment-variables)) to the extension's ID, and rebuild/restart the frontend.
+2. In `chrome-extension/public/manifest.json`, replace the placeholder `"https://your-app.vercel.app/*"` under `"externally_connectable"` with your real deployed frontend origin(s) — this is the allowlist of sites permitted to message the extension, so it must be exact (no broad wildcards) and match wherever `VITE_API_URL`/the frontend is actually hosted. `http://localhost:5173/*` is already included for local dev. Rebuild the extension after changing it.
+
+With both set: signing in on the web app pushes your token, API URL, and profile into the extension's storage (`chrome-extension/src/background/service-worker.js`'s `onMessageExternal` listener), and the extension immediately re-syncs your Focus Shield rules. Signing out clears the extension's session too. If `VITE_EXTENSION_ID` is left unset, this is a no-op and both logins stay fully independent — nothing else changes.
+
+> Security note: `externally_connectable.matches` in the manifest is the actual security boundary — any origin listed there can send the extension a login session. Keep it scoped to domains you control.
 
 ### Building the Mobile App
 

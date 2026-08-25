@@ -10,6 +10,12 @@
     "https://*.vercel.app/*",
     "*://*/*"
   ],
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:5173/*",
+      "https://your-app.vercel.app/*"
+    ]
+  },
   "action": {
     "default_popup": "index.html",
     "default_title": "JumpyBrain",
