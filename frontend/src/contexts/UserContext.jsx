@@ -6,6 +6,24 @@ import { queryClient } from "../providers/QueryProvider";
 const ctx = createContext();
 export const useUser = () => useContext(ctx);
 
+// Chrome extension ID to sync auth into (see chrome-extension/public/manifest.json's
+// "externally_connectable" and the background service worker's onMessageExternal
+// listener). Left unset, this is a silent no-op — the extension just keeps its own
+// separate Google sign-in.
+const EXTENSION_ID = import.meta.env.VITE_EXTENSION_ID;
+
+function sendToExtension(message) {
+  const chromeRuntime = window.chrome?.runtime;
+  if (!EXTENSION_ID || !chromeRuntime?.sendMessage) return;
+  try {
+    chromeRuntime.sendMessage(EXTENSION_ID, message, () => {
+      void chromeRuntime.lastError; // extension not installed / no listener — ignore
+    });
+  } catch {
+    // chrome.runtime unavailable in this context — ignore
+  }
+}
+
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -30,6 +48,21 @@ export function UserProvider({ children }) {
 
     setLoading(false);
   }, []);
+
+  // Push auth state to the Chrome extension (if installed) so users don't have to sign
+  // in twice — mirrors this context's token/user into chrome.storage.local via a message
+  // the extension's background service worker listens for.
+  useEffect(() => {
+    if (loading) return; // wait for the initial localStorage read to finish
+    if (token && user) {
+      sendToExtension({
+        type: 'SET_AUTH',
+        payload: { authToken: token, apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:4000/api', user },
+      });
+    } else if (!token) {
+      sendToExtension({ type: 'CLEAR_AUTH' });
+    }
+  }, [token, user, loading]);
 
   // Connect socket when we have a token, disconnect on logout
   useEffect(() => {
