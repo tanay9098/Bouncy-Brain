@@ -101,11 +101,10 @@
 
 /* ── Reset ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { height: 100%; }
+html, body, #root { height: 100%; width: 100%; }
 body {
   background: var(--bg);
   color: var(--text);
-  display: flex;
   transition: background 0.3s, color 0.3s;
 }
 
@@ -1077,13 +1076,34 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   background: var(--bg);
-  padding: var(--space-6);
 }
 
-.auth-card { width: 100%; max-width: 380px; }
+.auth-card {
+  width: calc(100% - 48px);
+  max-width: 400px;
+  background: var(--card-hover);
+  border: 1px solid var(--border-active);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 .auth-title {
   font-size: var(--text-xl);
@@ -1094,8 +1114,69 @@ textarea:focus-visible {
 .auth-subtitle {
   font-size: var(--text-sm);
   color: var(--muted);
-  margin-bottom: var(--space-5);
 }
+
+.auth-value {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.auth-status:empty { display: none; }
+
+.auth-error {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--red-dim);
+  color: var(--red);
+  font-size: 13px;
+}
+
+.auth-legal {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Google sign-in button ────────────────────────────── */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.btn-google:hover:not(:disabled) { background: var(--card); border-color: var(--border-active); }
+.btn-google:active:not(:disabled) { transform: translateY(1px); }
+.btn-google:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* ── Inline spinner ───────────────────────────────────── */
+.spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .auth-switch {
   font-size: 13px;
