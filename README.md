@@ -267,6 +267,14 @@ cp backend/.env.example backend/.env
 | `SMTP_USER` | SMTP login / sender email address |
 | `SMTP_PASS` | SMTP password or app-specific password |
 
+**VAPID setup** — `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are required for web push notifications; the backend throws on startup if they're missing. Generate a key pair with:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Then copy the printed `Public Key` / `Private Key` into `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` in `backend/.env` (and `VITE_VAPID_PUBLIC_KEY` in `frontend/.env.local` — see below).
+
 **Frontend** — create a `.env.local` in the `frontend/` directory:
 
 | Variable | Description |
