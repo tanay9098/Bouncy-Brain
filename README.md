@@ -267,6 +267,8 @@ cp backend/.env.example backend/.env
 | `SMTP_USER` | SMTP login / sender email address |
 | `SMTP_PASS` | SMTP password or app-specific password |
 
+**MongoDB URI** — the value in `.env.example` (`mongodb+srv://<user>:<password>@cluster.mongodb.net/bouncybrain`) is a placeholder, not a real host. Using it as-is fails with `querySrv ENOTFOUND _mongodb._tcp.cluster.mongodb.net` because that hostname doesn't exist in DNS. Get your real connection string from Atlas → Database → Connect → "Connect your application" — it will include an extra subdomain segment (e.g. `cluster0.ab12cde.mongodb.net`), and use that in `MONGODB_URI`.
+
 **VAPID setup** — `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are required for web push notifications; the backend throws on startup if they're missing. Generate a key pair with:
 
 ```bash
