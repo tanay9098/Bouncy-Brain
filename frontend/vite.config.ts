@@ -1,8 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Read the Buy Me a Coffee username from the repo's FUNDING.yml so the
+// in-app support button and the GitHub sponsor button stay in sync.
+function readFundingUrl() {
+  const fallback = 'https://buymeacoffee.com/tanaydwivedi'
+  try {
+    const yaml = fs.readFileSync(path.resolve(__dirname, '../.github/FUNDING.yml'), 'utf-8')
+    const match = yaml.match(/^buy_me_a_coffee:\s*(\S+)\s*$/m)
+    return match ? `https://buymeacoffee.com/${match[1]}` : fallback
+  } catch {
+    return fallback
+  }
+}
 
 export default defineConfig({
+  define: {
+    __FUNDING_URL__: JSON.stringify(readFundingUrl()),
+  },
   plugins: [
     react(),
     VitePWA({
