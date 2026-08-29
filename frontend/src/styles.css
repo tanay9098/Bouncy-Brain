@@ -460,6 +460,26 @@ textarea:focus-visible {
 .logout-btn:hover { border-color: var(--red); color: var(--red); }
 .logout-btn svg { width: 15px; height: 15px; }
 
+.support-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.support-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.support-btn svg { width: 15px; height: 15px; }
+
 /* ── Sidebar Backdrop ────────────────────────────────── */
 .sidebar-backdrop {
   display: none;

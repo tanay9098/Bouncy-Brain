@@ -97,7 +97,18 @@ const Icons = {
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   ),
+  Coffee: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M18 8h1a3 3 0 010 6h-1" />
+      <path d="M3 8h15v6a4 4 0 01-4 4H7a4 4 0 01-4-4V8z" />
+      <path d="M6 2v2M10 2v2M14 2v2" />
+    </svg>
+  ),
 };
+
+// Sourced from .github/FUNDING.yml at build time (see vite.config.ts) so
+// the in-app support link and the GitHub sponsor button never drift apart.
+const FUNDING_URL = __FUNDING_URL__;
 
 // Collapsed to 4 primary destinations
 const NAV_ITEMS = [
@@ -231,6 +242,15 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
 
         {/* Footer controls */}
         <div className="sidebar-footer">
+          <a
+            href={FUNDING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="support-btn"
+          >
+            <Icons.Coffee />
+            Buy me a coffee
+          </a>
           <button
             className="theme-toggle"
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
@@ -484,6 +504,16 @@ function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
         </div>
 
         <div className="bottom-sheet-footer">
+          <a
+            href={FUNDING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="support-btn"
+            onClick={onClose}
+          >
+            <Icons.Coffee />
+            Buy me a coffee
+          </a>
           <button
             className="theme-toggle"
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
