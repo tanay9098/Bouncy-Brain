@@ -2,9 +2,13 @@ export function notify(title, body) {
   if (!("Notification" in window)) return;
 
   if (Notification.permission === "granted") {
-    new Notification(title, {
+    const n = new Notification(title, {
       body,
-      icon: "/focus-icon.png"
+      icon: "/icons/icon-192.png"
     });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
   }
 }

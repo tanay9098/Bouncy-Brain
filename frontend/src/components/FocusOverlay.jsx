@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { tabAlertSound } from "../utils/sound";
+import { notify } from "../utils/notify";
 
 // ── 3-State Focus FSM ────────────────────────────────────────────────────
 // idle      → no session running
@@ -36,6 +37,7 @@ export default function FocusOverlay() {
   const [taskName, setTaskName] = useState("");
   const [distractionCount, setDistractionCount] = useState(0);
   const stateRef = useRef(STATES.IDLE);
+  const taskNameRef = useRef("");
   const debounceRef = useRef(null);
 
   function setState(s) {
@@ -49,6 +51,7 @@ export default function FocusOverlay() {
       if (active) {
         setState(STATES.FOCUSED);
         setTaskName(name);
+        taskNameRef.current = name;
         setDistractionCount(0);
         _distractionCountRef.current = 0;
       } else {
@@ -70,6 +73,12 @@ export default function FocusOverlay() {
             if (stateRef.current === STATES.DISTRACTED) {
               setState(STATES.ALERT);
               tabAlertSound.play();
+              notify(
+                "Hey, where'd you go?",
+                taskNameRef.current
+                  ? `You were working on "${taskNameRef.current}". Come back and finish strong.`
+                  : "You switched away during a focus session. Come back and finish strong."
+              );
               // Track distraction count for ML
               setDistractionCount((c) => {
                 const next = c + 1;
