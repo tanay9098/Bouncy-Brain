@@ -88,7 +88,20 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // index.html is deliberately left out of precaching: a precached
+        // shell is served straight from the service worker's own cache on
+        // every navigation, bypassing the Cache-Control headers on
+        // /index.html (see vercel.json) entirely. That let a stale shell
+        // referencing deleted hashed asset URLs get stuck serving forever
+        // on tabs with an already-installed service worker. Leaving html
+        // off this list means navigation requests hit the network (or the
+        // browser's own HTTP cache, which does respect those headers)
+        // instead of the precache. vite-plugin-pwa otherwise defaults to a
+        // navigateFallback of 'index.html', which registers a Workbox
+        // NavigationRoute serving all navigations from the precache too --
+        // disable that as well so navigations are never SW-intercepted.
+        navigateFallback: undefined,
+        globPatterns: ['**/*.{js,css,ico,png,svg}'],
         globIgnores: ['**/audio/**', '**/sounds/**'],
         runtimeCaching: [
           {
