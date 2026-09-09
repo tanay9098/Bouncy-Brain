@@ -104,11 +104,17 @@ const Icons = {
       <path d="M6 2v2M10 2v2M14 2v2" />
     </svg>
   ),
+  Feedback: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+    </svg>
+  ),
 };
 
 // Sourced from .github/FUNDING.yml at build time (see vite.config.ts) so
 // the in-app support link and the GitHub sponsor button never drift apart.
 const FUNDING_URL = __FUNDING_URL__;
+const FEEDBACK_URL = "https://www.jumpybrain.com/#feedback";
 
 // Collapsed to 4 primary destinations
 const NAV_ITEMS = [
@@ -214,6 +220,16 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
               {label}
             </NavLink>
           ))}
+          <a
+            href={FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item nav-item-sm nav-item-feedback"
+            onClick={onClose}
+          >
+            <Icons.Feedback />
+            Feedback
+          </a>
         </div>
 
         {/* Connectors — compact rows */}
@@ -318,6 +334,16 @@ function TopBar({ theme, setTheme, onMenuClick, onMoreClick, onLogout }) {
         >
           <Icons.Plug />
         </Link>
+        <a
+          href={FEEDBACK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="top-bar-icon-btn top-bar-feedback-btn"
+          title="Share feedback"
+          aria-label="Share feedback"
+        >
+          <Icons.Feedback />
+        </a>
         <button
           className="top-bar-icon-btn"
           onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
@@ -534,6 +560,43 @@ function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
   );
 }
 
+function DevNoticeBanner() {
+  return (
+    <div className="dev-banner">
+      <div className="dev-banner-main">
+        <span className="dev-banner-icon" aria-hidden="true">i</span>
+        <div className="dev-banner-text">
+          <span className="dev-banner-text-full">
+            <strong>JumpyBrain is currently under development.</strong> Some
+            features may not work as expected yet. We're actively improving
+            the experience, and your feedback helps us make it better.
+          </span>
+          <span className="dev-banner-text-short">
+            <strong>Under development.</strong> Some features may not work
+            yet —{" "}
+            <a
+              href={FEEDBACK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dev-banner-inline-link"
+            >
+              share feedback →
+            </a>
+          </span>
+        </div>
+      </div>
+      <a
+        href={FEEDBACK_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="dev-banner-cta"
+      >
+        Share Feedback →
+      </a>
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { user, loading } = useUser();
   if (loading) return null;
@@ -603,6 +666,7 @@ export default function App() {
           )}
 
           <main className="main-content" id="main-content">
+            {user && <DevNoticeBanner />}
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
