@@ -7,6 +7,23 @@ import EnergyControl from "./EnergyControl";
 import ShieldStatusCard from "./focus-shield/ShieldStatusCard";
 import { useBlockingStore } from "../stores/blockingStore";
 
+const FEEDBACK_URL = "https://www.jumpybrain.com/#feedback";
+
+function FeedbackCTACard() {
+  return (
+    <div className="card feedback-cta-card">
+      <div className="feedback-cta-title">Still improving JumpyBrain</div>
+      <div className="text-sm" style={{ color: "var(--text-soft)", lineHeight: 1.6, marginBottom: 12 }}>
+        Some features are still under development and may not work exactly as
+        expected. If you hit an issue or have an idea, we'd love to hear from you.
+      </div>
+      <a href={FEEDBACK_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+        <button className="btn btn-primary btn-sm">Share Feedback →</button>
+      </a>
+    </div>
+  );
+}
+
 export default function Home() {
   const { user } = useUser();
   const { energy } = useEnergy();
@@ -145,6 +162,10 @@ export default function Home() {
             )}
           </div>
 
+          <div className="feedback-cta-mobile">
+            <FeedbackCTACard />
+          </div>
+
           {/* Today stats */}
           <div className="grid-3">
             <div className="stat-tile">
@@ -207,6 +228,10 @@ export default function Home() {
                 ? "Pick 2 tasks. Start small. Consistency beats intensity."
                 : "Peak energy — tackle your most dreaded task now while you have momentum."}
             </div>
+          </div>
+
+          <div className="feedback-cta-desktop">
+            <FeedbackCTACard />
           </div>
         </div>
       </div>

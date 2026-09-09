@@ -194,6 +194,7 @@ textarea:focus-visible {
 .top-bar-icon-btn svg { width: 18px; height: 18px; }
 .top-bar-logout-btn { display: none; }
 .top-bar-more-btn { display: none; }
+.top-bar-feedback-btn { display: none; }
 
 .top-bar-brand {
   display: flex;
@@ -313,6 +314,13 @@ textarea:focus-visible {
   font-size: var(--text-xs);
 }
 .nav-item-sm svg { width: 15px; height: 15px; }
+
+/* Feedback nav item — subtle accent so it's discoverable but not shouting */
+.nav-item-feedback {
+  background: var(--indigo-dim);
+  color: var(--indigo-light);
+}
+.nav-item-feedback:hover { background: rgba(99, 102, 241, 0.22); color: var(--indigo-light); }
 
 /* Compact connector rows */
 .connector-row {
@@ -560,6 +568,9 @@ textarea:focus-visible {
 
   /* Show "More" trigger on mobile — opens the bottom sheet with Focus Timer, Focus Shield, etc. */
   .top-bar-more-btn { display: flex; }
+
+  /* Show feedback icon in top bar on mobile — sidebar nav item handles desktop */
+  .top-bar-feedback-btn { display: flex; }
 
   .bottom-nav { display: flex; }
   .bottom-sheet-overlay {
@@ -1240,6 +1251,92 @@ textarea:focus-visible {
   background: var(--card);
   color: var(--indigo-light);
   box-shadow: var(--shadow-card);
+}
+
+/* ── Dev Notice Banner ──────────────────────────────── */
+.dev-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-card);
+}
+
+.dev-banner-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.dev-banner-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--indigo-dim);
+  color: var(--indigo-light);
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dev-banner-text {
+  font-size: var(--text-sm);
+  color: var(--text-soft);
+  line-height: 1.6;
+}
+
+.dev-banner-text strong { color: var(--text); }
+.dev-banner-text-short { display: none; }
+
+.dev-banner-inline-link {
+  color: var(--indigo-light);
+  font-weight: 600;
+  text-decoration: none;
+}
+.dev-banner-inline-link:hover { text-decoration: underline; }
+
+.dev-banner-cta {
+  color: var(--indigo-light);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.dev-banner-cta:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .dev-banner { padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); }
+  .dev-banner-text-full { display: none; }
+  .dev-banner-text-short { display: inline; }
+  .dev-banner-cta { display: none; }
+}
+
+/* ── Feedback CTA Card ──────────────────────────────── */
+.feedback-cta-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.feedback-cta-mobile { display: none; }
+
+@media (max-width: 1024px) {
+  .feedback-cta-desktop { display: none; }
+  .feedback-cta-mobile { display: block; }
 }
 
 /* ── What Next Card ─────────────────────────────────── */
