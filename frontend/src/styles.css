@@ -1196,6 +1196,27 @@ textarea:focus-visible {
 .btn-google:active:not(:disabled) { transform: translateY(1px); }
 .btn-google:disabled { opacity: 0.7; cursor: not-allowed; }
 
+.google-btn-wrap {
+  position: relative;
+}
+.google-btn-wrap .btn-google {
+  pointer-events: none;
+}
+/* Google's real "Sign in with Google" button (from renderButton) is
+   mounted here, stretched over the styled button above and hidden via
+   opacity so the click a user makes actually lands on Google's own
+   element -- required for their popup/redirect flow to open reliably. */
+.google-btn-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0;
+  cursor: pointer;
+}
+
 /* ── Inline spinner ───────────────────────────────────── */
 .spinner {
   width: 16px;
