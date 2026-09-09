@@ -152,13 +152,17 @@ JumpyBrain/
 │       ├── stores/       # Zustand state stores (focus, blocking, timer, theme, ui)
 │       └── services/     # Axios API client
 │
-└── chrome-extension/     # React-based Chrome extension
-    ├── public/
-    │   └── blocked.html  # Standalone page shown when a blocked site is visited
-    └── src/
-        ├── background/service-worker.js  # Enforces site blocking via declarativeNetRequest
-        ├── components/   # Extension popup panels (incl. BlockingTab.jsx)
-        └── utils/        # API client, socket, local storage helpers
+├── chrome-extension/     # React-based Chrome extension
+│   ├── public/
+│   │   └── blocked.html  # Standalone page shown when a blocked site is visited
+│   └── src/
+│       ├── background/service-worker.js  # Enforces site blocking via declarativeNetRequest
+│       ├── components/   # Extension popup panels (incl. BlockingTab.jsx)
+│       └── utils/        # API client, socket, local storage helpers
+│
+└── ml-service/            # Python FastAPI microservice — priority scoring model
+    ├── main.py            # FastAPI app / entry point
+    └── requirements.txt   # fastapi, uvicorn, scikit-learn, numpy, pydantic
 ```
 
 ---
@@ -167,13 +171,19 @@ JumpyBrain/
 
 ### Frontend
 - **React 19** with React Router v7
+- **TypeScript** — used alongside JS/JSX across config files (`vite.config.ts`, `capacitor.config.ts`) and the Zustand stores
 - **Vite** — fast dev server and bundler
 - **Tailwind CSS v3** — utility classes wired to CSS custom property design tokens
-- **vite-plugin-pwa** — auto-generates `manifest.webmanifest`, service worker, and PWA icon entries
+- **vite-plugin-pwa** — auto-generates `manifest.webmanifest`, service worker, and PWA icon entries; installable Progressive Web App support
+- **Zustand** — lightweight state stores (focus, blocking, timer, theme, UI)
+- **TanStack Query (React Query)** — server-state fetching and caching
 - **Framer Motion** — animation primitives
 - **Recharts** — weekly/monthly analytics charts
+- **FullCalendar** (`@fullcalendar/react`, `daygrid`, `timegrid`, `interaction`) — the Calendar view
+- **Howler** — audio playback for guided Mindfulness exercises
+- **Firebase** — client SDK dependency (present in `package.json`, not currently imported under `src/`)
 - **Socket.io client** — real-time task and session updates
-- **vite-plugin-pwa** — installable Progressive Web App support
+- **Workbox CLI** — service worker tooling for the PWA build
 
 ### Backend
 - **Node.js + Express 5**
@@ -194,6 +204,13 @@ JumpyBrain/
 - **Capacitor 6** — wraps the frontend web build into native Android and iOS app shells
 - **Android (Kotlin)** — `UsageStatsManager` (foreground-app polling) + `AccessibilityService` (instant app-launch detection) to block apps
 - **iOS (Swift)** — `FamilyControls` + `ManagedSettings` to shield apps and filter web content at the OS level
+
+### ML Service
+- **Python + FastAPI** — standalone microservice (`ml-service/`) exposing the priority-scoring model over HTTP
+- **scikit-learn + NumPy** — model training/inference
+- **Pydantic** — request/response validation
+- **Uvicorn** — ASGI server
+- Called by the backend via the `ML_PRIORITY_URL` environment variable (see [`backend/routes/priority.js`](./backend/routes/priority.js)); a separate lightweight JS fallback model lives in `backend/ml/priorityModel.js`
 
 ### Infrastructure
 - **Frontend** → Vercel
