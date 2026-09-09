@@ -2,6 +2,20 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 
+// Sourced from .github/FUNDING.yml at build time (see vite.config.ts) so
+// this link and the sidebar's support button never drift apart.
+const FUNDING_URL = __FUNDING_URL__;
+
+function CoffeeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M18 8h1a3 3 0 010 6h-1" />
+      <path d="M3 8h15v6a4 4 0 01-4 4H7a4 4 0 01-4-4V8z" />
+      <path d="M6 2v2M10 2v2M14 2v2" />
+    </svg>
+  );
+}
+
 const GENDER_OPTIONS = [
   { value: "", label: "Prefer not to say" },
   { value: "male", label: "Male" },
@@ -226,6 +240,28 @@ export default function ProfileSettings({ onThemeChange }) {
               {themeMsg.text}
             </div>
           )}
+        </section>
+
+        {/* Support */}
+        <section className="profile-settings-card">
+          <div className="profile-settings-card-header">
+            <h2 className="profile-settings-card-title">Support JumpyBrain</h2>
+            <p className="profile-settings-card-desc">
+              JumpyBrain is free and open source. If it&apos;s helped you focus, consider
+              buying me a coffee — it helps me keep improving the app for the ADHD/ADD community.
+            </p>
+          </div>
+          <a
+            href={FUNDING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="support-btn"
+            style={{ width: "fit-content" }}
+            aria-label="Buy me a coffee (opens buymeacoffee.com in a new tab)"
+          >
+            <CoffeeIcon />
+            Buy me a coffee
+          </a>
         </section>
 
       </div>

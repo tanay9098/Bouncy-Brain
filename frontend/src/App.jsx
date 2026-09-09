@@ -263,6 +263,7 @@ function Sidebar({ theme, setTheme, onLogout, open, onClose }) {
             target="_blank"
             rel="noopener noreferrer"
             className="support-btn"
+            aria-label="Buy me a coffee (opens buymeacoffee.com in a new tab)"
           >
             <Icons.Coffee />
             Buy me a coffee
@@ -536,6 +537,7 @@ function MoreSheet({ open, onClose, theme, setTheme, onLogout }) {
             rel="noopener noreferrer"
             className="support-btn"
             onClick={onClose}
+            aria-label="Buy me a coffee (opens buymeacoffee.com in a new tab)"
           >
             <Icons.Coffee />
             Buy me a coffee
